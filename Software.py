@@ -960,5 +960,3 @@ def code_passcode_generator(first_name, lower = True):
         code_passcode_generator()
         
     return [code, email, password, passcode, '12345678'] if lower else [code, email, password, 'a1b2c3d4']
-
-new_x_edit_reg(None)
