@@ -5,6 +5,7 @@ import datetime
 from tkinter import messagebox, ttk
 import random
 from PIL import Image, ImageTk
+import poplib
 
 dark = True # flag for dark theme
 
@@ -16,15 +17,33 @@ def update_time(window, time, date):
     time.config(text = current_time)
     date.config(text = current_date)
 
-    window.after(1000, lambda : update_time(window, time, date))
+    if window.winfo_exists():
+        update = window.after(1000, lambda : update_time(window, time, date))  
+
+    else:
+        pass  
+
+def timeframe(window):
+
+    datetime_frame = tk.Frame(window)
+    datetime_frame.pack(padx = 5, pady = 1, fill = 'both')
+
+    time = tk.Label(datetime_frame, font = ('Arial', 10, 'bold'))
+    date = tk.Label(datetime_frame, font = ('Arial', 10, 'bold'))
+
+    time.pack(padx = 5, pady = 3, side = 'right')
+    date.pack(padx = 5, pady = 3, side = 'left')
+
+    update_time(datetime_frame, time, date)
+
+    dark_theme(datetime_frame)
 
 # establish connection with mysql database
-
 connection = mysql.connector.connect(
-    host = 'localhost',
-    user = 'root',
-    password = '8ix7i2fe',
-    database = 'Employee_Management_System'
+    host = 'sql.freedb.tech',
+    user = 'freedb_pranav',
+    password = 'x$CSpqPg8sN8*7n',
+    database = 'freedb_empsys'
 )
 
 cursor = connection.cursor() # establish cursor
@@ -75,12 +94,13 @@ def hover(window):
             widget.bind('<Leave>', on_leave)
             widget.bind('<Button-1>', on_click)
 
-def switch_theme(window, subwindow):
+def switch_theme(window, subwindows):
         
     global dark
     dark = False if dark else True
     dark_theme(window)
-    dark_theme(subwindow)
+    for subwindow in subwindows:
+        dark_theme(subwindow)
 
 def dark_theme(window):
 
@@ -171,15 +191,33 @@ def homepage(): # home screen to the app
     window = tk.Tk()
     window.title('Employee Management System')
 
+    datetime_frame = tk.Frame(window)
+    datetime_frame.pack(padx = 5, pady = 1, fill = 'both')
+
+    time = tk.Label(datetime_frame, font = ('Arial', 10, 'bold'))
+    date = tk.Label(datetime_frame, font = ('Arial', 10, 'bold'))
+
+    time.pack(padx = 5, pady = 3, side = 'right')
+    date.pack(padx = 5, pady = 3, side = 'left')
+
+    update_time(datetime_frame, time, date)
+
     #creating the frame
     frame = tk.LabelFrame(window, text = 'Options', bd = 5, relief = 'groove')
     frame.pack(padx = 5, pady = 5, fill = 'both')
 
     # labels on the buttons
-    button_Label = ['Administrator Interface', 'Employee Interface', 'Employee Registration', 'Mark Attendance', 'Exit']
+    button_Label = ['Administrator Interface', 
+                    'Employee Interface', 
+                    'Employee Registration', 
+                    'Mark Attendance', 
+                    'Exit']
     
     #functions fot the button
-    button_function = [entry_ticket_x_attendance, entry_ticket_x_attendance, lambda : new_x_edit_reg(), entry_ticket_x_attendance, 
+    button_function = [lambda: entry_ticket_x_attendance(window, lower = False),
+                       lambda: entry_ticket_x_attendance(window), 
+                       lambda : new_x_edit_reg(window), 
+                       lambda: entry_ticket_x_attendance(window, attendance = True), 
                        lambda : title_page(exit = True, from_window = window, titles = 'Thank You....'.split(' '))]
 
     # row and column for gridding
@@ -201,7 +239,7 @@ def homepage(): # home screen to the app
         row = row + 1 if column == 0 else row
 
     #theme change button and gridding
-    theme_change = tk.Button(window, text = 'Change Theme\nLight / Dark', command = lambda : switch_theme(window, frame), padx = 10, pady = 10)
+    theme_change = tk.Button(window, text = 'Change Theme\nLight / Dark', command = lambda : switch_theme(window, (frame, datetime_frame)), padx = 10, pady = 10)
     theme_change.pack(padx = 5, pady = 5, fill = 'both')
 
     #adding hover effects
@@ -210,6 +248,7 @@ def homepage(): # home screen to the app
 
     dark_theme(window)
     dark_theme(frame)
+    dark_theme(datetime_frame)
         
     #adjusting according th resizing of the screen
     frame.grid_columnconfigure('all', weight = 1)
@@ -217,7 +256,9 @@ def homepage(): # home screen to the app
     window.mainloop()  #looping the screen
 
 # combined function to mark attendance and to get data for interface access
-def entry_ticket_x_attendance(lower = True, attendance = False): 
+def entry_ticket_x_attendance(from_window, lower = True, attendance = False): 
+
+    from_window.destroy()
 
     def back_func(): # back function
         
@@ -242,40 +283,99 @@ def entry_ticket_x_attendance(lower = True, attendance = False):
 
         if not attendance: # data verification and interface access
 
-            table = 'Employee_Database' if lower else 'Adminitrator_Database'
-            passcode = passcode if lower else hash.sha3_256(passcode.encode()).hexdigest()
-            Interface = Employee if lower else Administrator
+            table = 'Employee' if lower else 'Administrator'
+            passcode = passcode if lower else hash(passcode.encode()).hexdigest()
             
-            cursor.execute(f"""SELECT Gender FROM {table}
-                            WHERE Employee_Code = {int(emp_code)}
+            cursor.execute(f"""SELECT {table}_Code  FROM {table}
+                            WHERE {table}_Code = {int(emp_code)}
                             AND First_Name = '{first_name}'
-                            AND Last_Name = '{last_name}'
-                            AND Login_Password = '{passcode}'""")
+                            AND Last_Name = '{last_name}'""")
             data = cursor.fetchone()
 
-            if data is None:
-                #error message if data not found
-                tk.messagebox.showerror(title = 'Error', message = 'Data Not Found')
+            cursor.execute(f"""SELECT Interface FROM Login_Details
+                           WHERE Login_Password = '{passcode}'""")
+            Interface = cursor.fetchone()
+
+            if Interface is None and data is None:
+                tk.messagebox.showerror(title = 'Error', message = 'Incorrect Data and Password')
                 return
             
+            elif data is None:
+                #error message if data not found
+                tk.messagebox.showerror(title = 'Error', message = 'Incorrect Data')
+                return
+
+            elif Interface is None:
+                tk.messagebox.showerror(title = 'Error', message = 'Incorrect Password')
+                return
+            
+            Interface = Administrator if Interface[0] == 'Administrator' else Employee
+            
             #running interface
-            Interface(emp_code, first_name, last_name)
+            window.destroy()
+            tk.messagebox.showinfo(title = 'Login Successful', message = 'Login Successful')
+
+            Interface(emp_code)
         
         elif attendance and lower: # to mark attendance
             
-            pass
+            cursor.execute('SHOW COLUMNS FROM Attendance_Sheet')
+            columns = [column[0] for column in cursor.fetchall()]
+
+            last_date = datetime.datetime.strptime(columns[-1], '%Y-%m-%d').date() if len(columns) > 2 else datetime.date.today() - datetime.timedelta(days = 1)
+
+            dates = []
+            
+            while last_date != datetime.date.today():
+                last_date += datetime.timedelta(days = 1)
+                dates.append(last_date)
+            
+            any(cursor.execute(f"""ALTER TABLE Attendance_Sheet 
+                               ADD COLUMN `{date}` CHAR(1) DEFAULT 'A'""") for date in dates)
+            
+            cursor.execute(f"""SELECT `{last_date}` FROM Attendance_Sheet
+                            WHERE Employee_Code = {int(emp_code)}
+                            AND Attendance_Passcode = '{passcode}'""")
+            
+            status = cursor.fetchone()
+
+            if status is None:
+                tk.messagebox.showerror(title = 'Error', message = 'Incorrect Data')
+                return
+
+            if status[0] == 'P':
+
+                window.destroy()
+                tk.messagebox.showinfo(title = 'Attendance Marked Already', message = 'Attendance has been already marked for the day')
+                return
+
+            cursor.execute(f"""UPDATE Attendance_Sheet
+                        SET `{last_date}` = 'P'
+                        WHERE Employee_Code = {emp_code}
+                        AND Attendance_Passcode = '{passcode}'""")
+            
+            connection.commit()
+        
+            window.destroy()
+            tk.messagebox.showinfo(title = 'Attendance Marked', message = 'Attendance has been marked for the day')
+            homepage()
 
     #creating the window
     window = tk.Tk()
     window.title('Data Verification')
     window.minsize(width = 400, height = 0)
 
+    timeframe(window)
+
     #creating the frame
     frame = tk.LabelFrame(window, relief = 'groove', bd = 5)
     frame.pack(padx = 5, pady = 5, fill = 'both')
 
     # widget Labels
-    Labels = ['Employee Code', 'First Name', 'Last Name', 'Login Password' if not attendance else 'Attendance Passcode']
+    Labels = ['Employee Code' if lower else 'Administrator Code', 
+              'First Name', 
+              'Last Name', 
+              'Login Password' if not attendance else 'Attendance Passcode']
     
     for label, row in zip(Labels, range(4)):
         
@@ -307,13 +407,18 @@ def entry_ticket_x_attendance(lower = True, attendance = False):
     # adjusting to resizing of window
     frame.grid_columnconfigure('all', weight = 1)
 
+    dark_theme(window)
+    dark_theme(frame)
+
     window.mainloop()# looping the window
 
-def Administrator(emp_code, first_name): # administrator interface
+def Administrator(emp_code): # administrator interface
     
     #creating the window
     window = tk.Tk()
     window.title('Employee Interface')
+
+    timeframe(window)
 
     #creeating a frame
     frame = tk.LabelFrame(window, bd = 5, relief = 'groove')
@@ -357,10 +462,10 @@ def Administrator(emp_code, first_name): # administrator interface
     # row-column variables for griding
     row, column = 0, 0
 
-    for label, function in zip(Labels, functions):
+    for label in Labels:
         
         #creating button widget and gridding them
-        button = tk.Button(frame, text = label.title(), command = function, padx = 20, pady = 20)
+        button = tk.Button(frame, text = label.title(), padx = 20, pady = 20)
         button.grid(row = row, column = column, padx = 5, pady = 5, sticky = 'news')
 
         #adjusting the columns
@@ -378,11 +483,13 @@ def Administrator(emp_code, first_name): # administrator interface
 
     window.mainloop() # looping the main screen
 
-def Employee(emp_code, first_name): # employee interface
+def Employee(emp_code): # employee interface
     
     #creating window
     window = tk.Tk()
     window.title('Employee Interface')
+
+    timeframe(window)
 
     #creating frame
     frame = tk.LabelFrame(window, bd = 5, relief = 'groove')
@@ -412,10 +519,10 @@ def Employee(emp_code, first_name): # employee interface
     #row-column variables for gridding
     row, column = 0, 0
 
-    for label, function in zip(Labels, functions):
+    for label in Labels:
 
         #creating button widgets and gridding them
-        button = tk.Button(frame, text = label.title(), command = function, padx = 20, pady = 20)
+        button = tk.Button(frame, text = label.title(), padx = 20, pady = 20)
         button.grid(row = row, column = column, padx = 5, pady = 5, sticky = 'news')
 
         #adding hover effects
@@ -437,12 +544,19 @@ def Employee(emp_code, first_name): # employee interface
     window.mainloop() #looping the window
 
 # combined function to add new registeration or edit ones registration for both employee and admisistrator
-def new_x_edit_reg(from_function, emp_code = None, lower = True, edit = False):
+def new_x_edit_reg(from_window, from_function = None, from_code = None, emp_code = None, lower = True, edit = False):
+    
+    #from_window.destroy()
 
     def back(): # back function
         
         window.destroy()
-        from_function()
+        
+        if from_function is None:
+            homepage()
+            return
+        
+        from_function(from_code)
 
     def clear(datas = None): # function to clear the form
 
@@ -456,67 +570,140 @@ def new_x_edit_reg(from_function, emp_code = None, lower = True, edit = False):
         nationality.delete(0, tk.END) ; nationality.insert(0, 'Nationality' if not edit else datas[4])
         phone_no.delete(0, tk.END) ; phone_no.insert(0, '+971 ' if not edit else datas[5])
 
-        dob_date.delete(0, tk.END) ; dob_date.insert(0, 'Date' if not edit else datas[6][2])
-        dob_month.delete(0, tk.END) ; dob_month.insert(0, 'Month' if not edit else datas[6][1])
-        dob_year.delete(0, tk.END) ; dob_year.insert(0, 'Year' if not edit else datas[6][0])
+        email.delete(0, tk.END) ; email.insert(0, 'Email' if not edit else datas[6])
 
-        doh_date.delete(0, tk.END) ; doh_date.insert(0, 'Date' if not edit else datas[8][2] if lower else datas[9][2])
-        doh_month.delete(0, tk.END) ; doh_month.insert(0, 'Month' if not edit else datas[8][1] if lower else datas[9][1])
-        doh_year.delete(0, tk.END) ; doh_year.insert(0, 'Year' if not edit else datas[8][0] if lower else datas[9][0])
+        dob_date.delete(0, tk.END) ; dob_date.insert(0, 'Date' if not edit else datas[7][2])
+        dob_month.delete(0, tk.END) ; dob_month.insert(0, 'Month' if not edit else datas[7][1])
+        dob_year.delete(0, tk.END) ; dob_year.insert(0, 'Year' if not edit else datas[7][0])
 
-        if lower: #fields specific to employee
+        doh_date.delete(0, tk.END) ; doh_date.insert(0, 'Date' if not edit else datas[8][2])
+        doh_month.delete(0, tk.END) ; doh_month.insert(0, 'Month' if not edit else datas[8][1])
+        doh_year.delete(0, tk.END) ; doh_year.insert(0, 'Year' if not edit else datas[8][0])
 
-            emp_type.delete(0, tk.END) ; emp_type.insert(0, 'Employement Type' if not edit else datas[7])
+        name_1.delete(0, tk.END) ; name_1.insert(0, 'Name' if not edit else datas[9])
+        phone_no_1.delete(0, tk.END) ; phone_no_1.insert(0, '+971 ' if not edit else datas[10])
 
-            name_1.delete(0, tk.END) ; name_1.insert(0, 'Name' if not edit else datas[9])
-            phone_no_1.delete(0, tk.END) ; phone_no_1.insert(0, '+971 ' if not edit else datas[10])
-
-            name_2.delete(0, tk.END) ; name_2.insert(0, 'Name' if not edit else datas[11])
-            phone_no_2.delete(0, tk.END) ; phone_no_2.insert(0, '+' if not edit else datas[12])
-        
-        if not lower: # fields specific to admininstrator
-            position.delete(0, tk.END) ; position.insert(0, 'Position' if not edit else datas[7])
-            salary.delete(0, tk.END) ; salary.insert(0, 'Salary' if not edit else datas[8])
-
-    def add(): # update or add new registration function
-        
-        first_name = f_name.get().title()
-        last_name = l_name.get().title()
-        gender = gender.get().title()
-
-        age = int(age.get())
-        nationality = nationality.get().title()
-        phone_no = int(phone_no.get()[5:])
-
-        date_dob = dob_date.get() if dob_date.get().isdigit() else 'Error'
-        month_dob = dob_month.get()
-        year_dob = dob_year.get()
-
-        date_doh = doh_date.get()
-        month_doh = doh_month.get()
-        year_doh = doh_year.get()
+        name_2.delete(0, tk.END) ; name_2.insert(0, 'Name' if not edit else datas[11])
+        phone_no_2.delete(0, tk.END) ; phone_no_2.insert(0, '+' if not edit else f'{datas[12]} {datas[13]}')
 
         if lower:
 
-            emp_type = emp_type.get()
+            emp_type.delete(0, tk.END) ; emp_type.insert(0, 'Employement Type' if not edit else datas[14])
+            branch.delete(0, tk.END) ; branch.insert(0, 'Branch' if not edit else datas[15])
+            dept.delete(0, tk.END) ; dept.insert(0, 'Department' if not edit else datas[16])
+        
+        if not lower: # fields specific to admininstrator
 
-            name_1 = name_1.get()
-            contact_1 = contact_1.get()[5:]
+            position.delete(0, tk.END) ; position.insert(0, 'Position' if not edit else datas[14])
+            salary.delete(0, tk.END) ; salary.insert(0, 'Salary' if not edit else datas[15])
 
-            name_2 = name_2.get()
-            country_code, contact_2 = (contact_2.get()).split(' ')
+    def add(): # update or add new registration function
+        
+        first_name = f_name.get().title() if (f_name.get()).isalpha() else None
+        last_name = l_name.get().title() if (l_name.get()).isalpha() else None
+        _gender = gender.get().title() if (gender.get()).isalpha() else None
+
+
+        _age = int(age.get()) if (age.get()).isdigit() else None
+        _nationality = nationality.get().title() if (nationality.get()).isalpha() else None
+        _phone_no = int(phone_no.get()[5:]) if ((phone_no.get())[5:]).isdigit() else None
+
+        _email = email.get() if '@' in email.get() and '.com' in email.get() else None
+
+        date_dob = int(dob_date.get()) if (dob_date.get()).isdigit() else None
+        month_dob = int(dob_month.get()) if (dob_month.get()).isdigit() else None
+        year_dob = int(dob_year.get()) if (dob_year.get()).isdigit() else None
+
+        date_doh = int(doh_date.get()) if (doh_date.get()).isdigit() else None
+        month_doh = int(doh_month.get()) if (doh_month.get()).isdigit() else None
+        year_doh = int(doh_year.get()) if (doh_year.get()).isdigit() else None
+
+        _name_1 = name_1.get() if (name_1.get()).isalpha() else None
+        _contact_1 = (phone_no_1.get()[5:]) if ((phone_no_2.get())[5:]).isdigit() else None
+
+        _name_2 = name_2.get() if (name_2.get()).isalpha() else None
+        country_code = ((phone_no_2.get()).split())[0] if ((((phone_no_2.get()).split())[0])[1:]).isdigit() else None
+        contact_2 = int(((phone_no_2.get()).split())[1]) if (((phone_no_2.get()).split())[1]).isdigit() else None
+
+        if lower:
+            _emp_type = emp_type.get() if (emp_type.get()).isalpha() else None
+            _branch = branch.get() if (branch.get()).isalpha() else None
+            _dept = dept.get() if (dept.get()).isalpha() else None
 
         if not lower:
+            _position = position.get() if (position.get()).isalpha() else None
+            _salary = salary.get() if (salary.get()).isdigit() else None
 
-            postion = position.get()
-            salary = salary.get()
-
-        data = [('First_Name', first_name), ('Last_Name', last_name),
-                ('Gender', gender), ('Age', age), ('Nationality', nationality),
-                ('Phone_Number', phone_no), ('Date_Of_Birth', f'{year_dob}-{month_dob}-{date_dob}'),
-                ('Date_Of_Hire', f'{year_doh}-{month_doh}-{date_doh}')]
+        datas = [('First_Name', first_name), 
+                ('Last_Name', last_name),
+                ('Gender', _gender), 
+                ('Age', _age), 
+                ('Nationality', _nationality),
+                ('Phone_Number', _phone_no), 
+                ('Date_Of_Birth', f'{year_dob}-{month_dob}-{date_dob}'),
+                ('Date_Of_Hire', f'{year_doh}-{month_doh}-{date_doh}'),
+                ('Emg_Contact_1_Name', _name_1), 
+                ('Emg_Contact_1_Phone_Number', _contact_1),
+                ('Emg_Contact_2_Name', _name_2), 
+                ('Country_Code', country_code), 
+                ('Emg_Contact_2_Phone_Number', int(contact_2)),
+                ('Email', _email)]
         
-        data = data + [('Contact_1_Name')] if lower else data + []
+        datas = datas + [('Employment_Type', _emp_type), ('Branch', _branch), ('Department', _dept)] if lower else datas + [('Salary', _salary), ('Position', _position)]
+
+        if any(data[1] is None or data[0].replace('_', ' ') == data[1] for data in datas):
+
+            print([data for data in datas if data[1] is None])
+            tk.messagebox.showerror(title = 'Error', message = 'Invalid Entry')
+            return
+
+        table = 'Employee' if lower else 'Administrator'
+
+        if edit:
+
+            window.destroy()
+
+            tk.messagebox.showinfo(title = 'Updated', message = 'Data Edited Succesfully')
+
+            for data in datas:
+                
+                statement = f"""UPDATE {table} SET `{data[0]}` = {data[1]} WHERE {table}_Code = {emp_code}""" if isinstance(data[1], int) else f"""
+                               
+                               UPDATE {table} SET `{data[0]}` = '{data[1]}' WHERE {table}_Code = {emp_code}"""
+                
+                cursor.execute(statement)
+
+            connection.commit()
+
+        else:
+
+            window.destroy()
+
+            values = code_passcode_generator(lower)
+            
+            Values = ', '.join([f'{table}_Code'] + [data[0] for data in datas])
+            data_lst = tuple([values[0]] + [value[1] for value in datas])
+
+            cursor.execute(f"""INSERT INTO {table} ({Values})
+                           VALUES {data_lst}""")
+            
+            if lower:
+                cursor.execute(f"""INSERT INTO Attendance_Sheet (Employee_Code, Attendance_Passcode)
+                               VALUES ({values[0]}, '{values[1]}')""")
+                
+            connection.commit()
+
+            if lower:
+                generated_data(values)
+
+            else:
+                tk.messagebox.showinfo(title = 'Registeration Complete', message = f'Data Registered.\n\nAdministrator Code : {values}')
+
+        if from_function is None:
+            homepage()
+            return
+        
+        from_function(from_code)
 
     current_year = datetime.datetime.now().year # variable to mark current year
 
@@ -719,11 +906,15 @@ def new_x_edit_reg(from_function, emp_code = None, lower = True, edit = False):
     years = [str(year) for year in range(current_year - 60, current_year - 17)]
 
     #combobox values for employment types
-    employment_types = ['Full-Time', 'Part-Time', 'Contract', 'Intern']
+    employment_types = ['Full Time', 'Part Time', 'Contract', 'Intern']
+    branches = ['Branch - 1']
+    departments = ['Department']
     
     #creating window
     window = tk.Tk()
     window.title('Registration Form' if not edit else 'Edit Registration')
+
+    timeframe(window)
 
     #creating common frames ( for administrator and employee ) and packing them
     emp_data_frame = tk.LabelFrame(window, text = 'Employee Details', bd = 5, relief = 'groove')
@@ -732,18 +923,13 @@ def new_x_edit_reg(from_function, emp_code = None, lower = True, edit = False):
     emp_data_frame.pack(padx = 5, pady = 5, fill = 'both')
     job_data_frame.pack(padx = 5, pady = 5, fill = 'both')
 
-    if lower: # specific frame and label list for employee registration
+    #creating emergency contact data frame and packing them
+    emg_data_frame = tk.LabelFrame(window, text = 'Emergency Contact Details', bd = 5, relief = 'groove')
+    emg_data_frame.pack(padx = 5, pady = 5, fill = 'both')
 
-        #creating emergency contact data frame and packing them
-        emg_data_frame = tk.LabelFrame(window, text = 'Emergency Contact Details', bd = 5, relief = 'groove')
-        emg_data_frame.pack(padx = 5, pady = 5, fill = 'both')
-
-        # list of labels in frame 3
-        Label_lst_3 = ['Contact - 1 ( From UAE )', 'Name', 'Phone Number', 'Contact - 2 ( From Motherland )', 'Name', 'Phone Number']
-
-    # list of labels in frame 1 and 2
-    Label_lst_1 = ['First Name', 'Last Name', 'Gender', 'Age', 'Nationality', 'Phone Number', 'Date of Birth']
-    Label_lst_2 = ['Employment Type', 'Date of Hire']
+    # list of labels in frame 3
+    Label_lst_3 = ['Contact - 1 ( From UAE )', 'Name', 'Phone Number', 'Contact - 2 ( From Motherland )', 'Name', 'Phone Number']
+    Label_lst_1 = ['First Name', 'Last Name', 'Gender', 'Age', 'Nationality', 'Phone Number', 'Email', 'Date of Birth']
 
     #row-column variable for gridding
     row, column = 0, 0
@@ -758,12 +944,14 @@ def new_x_edit_reg(from_function, emp_code = None, lower = True, edit = False):
     nationality = ttk.Combobox(emp_data_frame, width = 25, values = [country[0] for country in nationality_contry_code])
     phone_no = tk.Entry(emp_data_frame, width = 25)
 
+    email = tk.Entry(emp_data_frame, width = 25)
+
     dob_date = ttk.Combobox(emp_data_frame, width = 25, values = days)
     dob_month = ttk.Combobox(emp_data_frame, width = 25, values = months)
     dob_year = ttk.Combobox(emp_data_frame, width = 25, values = years)
 
     #list of widgets for frame 1
-    widgets = [f_name, l_name, gender, age, nationality, phone_no, (dob_date, dob_month, dob_year) ]
+    widgets = [f_name, l_name, gender, age, nationality, phone_no, email, (dob_date, dob_month, dob_year) ]
 
     for label, widget in zip(Label_lst_1, widgets):
 
@@ -773,7 +961,8 @@ def new_x_edit_reg(from_function, emp_code = None, lower = True, edit = False):
 
         # gridding the widgets ( except date of birth )
         if not isinstance(widget, tuple):
-            widget.grid(row = row + 1, column = column, padx = 5, pady = 5, sticky = 'news')
+            widget.grid(row = row + 1, column = column, columnspan = 1 if widget != email else 3, 
+                        padx = 5, pady = 5, sticky = 'news')
 
         # gridding date of birth widgets
         if isinstance(widget, tuple):
@@ -785,8 +974,9 @@ def new_x_edit_reg(from_function, emp_code = None, lower = True, edit = False):
             year.grid(row = row + 1, column = 2, padx = 5, pady = 5, sticky = 'news')
 
         #adjusting the column space
-        if label == 'Date of Birth':
+        if label == 'Date of Birth' or label == 'Email':
             text.grid_configure(columnspan = 3)
+            column += 2
 
         # incrementing the row-column variable
         column = column + 1 if column + 1 < 3 else 0
@@ -808,48 +998,19 @@ def new_x_edit_reg(from_function, emp_code = None, lower = True, edit = False):
 
     if lower: # specific wigets, frames and labels for employee
 
-        #defining and gridding employment type label
-        emp_type_label = tk.Label(job_data_frame, text = 'Employment Type', font = ('Arial', 9, 'underline', 'bold'))
-        emp_type_label.grid(row = 0, column = 0, columnspan = 3, padx = 5, pady = 5)
-
-        # defining employment type widget
+        # defining  widget
         emp_type = ttk.Combobox(job_data_frame,width = 25, values = employment_types)
-        emp_type.grid(row = 1, column = 0, columnspan = 3, padx = 5, pady = 5, sticky = 'news')
+        branch = ttk.Combobox(job_data_frame,width = 25, values = branches)
+        dept = ttk.Combobox(job_data_frame,width = 25, values = departments)
 
-        #redefining the row-column variables
-        row, column = 0, 0
+        widgets = [('Employment Type', emp_type), ('Posting', branch), ('Department', dept)]
 
-        # defining widgets for frame 3
-        name_1 = tk.Entry(emg_data_frame, width = 25)
-        phone_no_1 = tk.Entry(emg_data_frame, width = 25)
+        for widget, column in zip(widgets, range(3)):
 
-        name_2 = tk.Entry(emg_data_frame, width = 25)
-        phone_no_2 = tk.Entry(emg_data_frame, width = 25)
+            label = tk.Label(job_data_frame, text = widget[0], font = ('Arial', 9, 'bold', 'underline'))
+            label.grid(row = 0, column = column, padx = 5, pady = 5, sticky = 'ew')
 
-        # widget list for frame 3
-        widgets = [None, name_1, phone_no_1, None, name_2, phone_no_2]
-
-        for label, widget in zip(Label_lst_3, widgets):
-            
-            # defining and gridding labels
-            text = tk.Label(emg_data_frame, text = label, font = ('Arial', 9, 'bold', 'underline'))
-            text.grid(row = row, column = column, padx = 5, pady = 5, sticky = 'news')
-
-            #adjusting the column space
-            if  'Contact' in label:
-                text.grid_configure(columnspan = 2)
-                column += 1
-
-            #gridding the widgets
-            if widget is not None:
-                widget.grid(row = row + 1, column = column, padx = 5, pady = 5, sticky = 'news')
-
-            # incrementing row-column variable
-            column = column + 1 if column + 1 < 2 else 0
-            row = row + 1 if label == 'Contact - 1' or label == 'Contact - 2' else row + 2 if column == 0 else row
-        
-        #adapting to window resizing
-        emg_data_frame.grid_columnconfigure('all', weight = 1)
+            widget[1].grid(row = 1, column = column, padx = 5, pady = 5, sticky = 'ew')
 
     if not lower: # specific widgets, frames, labels for administrator
 
@@ -869,39 +1030,72 @@ def new_x_edit_reg(from_function, emp_code = None, lower = True, edit = False):
             #gridding widgets
             widget.grid(row = 1, column = column, columnspan = 2, padx = 5, pady = 5, sticky = 'news')
 
-    #adapting to resizing
+    #redefining the row-column variables
+    row, column = 0, 0
+
+    # defining widgets for frame 3
+    name_1 = tk.Entry(emg_data_frame, width = 25)
+    phone_no_1 = tk.Entry(emg_data_frame, width = 25)
+
+    name_2 = tk.Entry(emg_data_frame, width = 25)
+    phone_no_2 = tk.Entry(emg_data_frame, width = 25)
+
+    # widget list for frame 3
+    widgets = [None, name_1, phone_no_1, None, name_2, phone_no_2]
+
+    for label, widget in zip(Label_lst_3, widgets):
+        
+        # defining and gridding labels
+        text = tk.Label(emg_data_frame, text = label, font = ('Arial', 9, 'bold', 'underline'))
+        text.grid(row = row, column = column, padx = 5, pady = 5, sticky = 'news')
+
+        #adjusting the column space
+        if  'Contact' in label:
+            text.grid_configure(columnspan = 2)
+            column += 1
+
+        #gridding the widgets
+        if widget is not None:
+            widget.grid(row = row + 1, column = column, padx = 5, pady = 5, sticky = 'news')
+
+        # incrementing row-column variable
+        column = column + 1 if column + 1 < 2 else 0
+        row = row + 1 if label == 'Contact - 1' or label == 'Contact - 2' else row + 2 if column == 0 else row
+    
+    #adapting to window resizing
+    emg_data_frame.grid_columnconfigure('all', weight = 1)
     emp_data_frame.grid_columnconfigure('all', weight = 1)
     job_data_frame.grid_columnconfigure('all', weight = 1)
 
     if edit: # for editing data
+
+        datas = ['First_Name', 
+                 'Last_Name', 
+                 'Gender', 
+                 'Age', 
+                 'Nationality', 
+                 'Phone_Number', 
+                 'Email', 
+                 'Date_Of_Birth',
+                 'Date_Of_Hire', 
+                 'Emg_Contact_1_Name', 
+                 'Emg_Contact_1_Phone_Number', 
+                 'Emg_Contact_2_Name',
+                 'Country_Code', 
+                 'Emg_Contact_2_Phone_Number']
         
-        if lower: # to retrieve data of the employee
-            
-            #datas to be retrieved
-            datas = ['First_Name', 'Last_Name', 'Gender', 'Age', 'Nationality',
-                    'Phone_Number', 'Date_Of_Birth', 'Employment_Type', 'Date_Of_Hire', 
-                    'Contact_1_Name', 'Contact_1_Phone_Number', 'Contact_2_Name',
-                    'Country_Code', 'Contact_2_Phone_Number']
-            
-            for data, index in zip(datas, range(len(datas))):
+        #table variable definition
+        table = 'Employee' if lower else 'Administrator'
+
+        #excess datas to be retrieved
+        datas = datas + ['Employment_Type', 'Branch', 'Department'] if lower else datas + ['Salary', 'Position']
+
+        for data, index in zip(datas, range(len(datas))):
 
                 #retrieveing data from database             
-                cursor.execute(f"""SELECT {data} FROM Employee_Database
-                               WHERE Employee_Code = {emp_code}""")
-                datas[index] = cursor.fetchone()[0] if 'Date' not in data else (cursor.fetchone()[0]).split('-')
-
-        if not lower: # to retrieve the data of the administrator
-            
-            #datas to be retrieved
-            datas = ['First_Name', 'Last_Name', 'Gender', 'Age', 'Nationality',
-                    'Phone_Number', 'Date_Of_Birth', 'Position', 'Salary', 'Date_Of_Hire']
-            
-            for data, index in zip(datas, range(len(datas))):
-
-                #retrieveing data from database             
-                cursor.execute(f"""SELECT {data} FROM Administrator_Database
-                               WHERE Employee_Code = {emp_code}""")
-                datas[index] = cursor.fetchone()[0] if 'Date' not in data else (cursor.fetchone()[0]).split('-')
+                cursor.execute(f"""SELECT {data} FROM {table}
+                               WHERE {table}_Code = {emp_code}""")
+                datas[index] = str(cursor.fetchone()[0]) if 'Date' not in data else str(cursor.fetchone()[0]).split('-')
 
     # function to run on double click on widgets
     def on_double_click(event):
@@ -917,57 +1111,72 @@ def new_x_edit_reg(from_function, emp_code = None, lower = True, edit = False):
     nationality.insert(0, 'Nationality' if not edit else datas[4]) ; nationality.bind('<Double-Button-1>', on_double_click)
     phone_no.insert(0, '+971 ' if not edit else '+971 ' + datas[5])
 
-    dob_date.insert(0, 'Date' if not edit else datas[6][2]) ; dob_date.bind('<Double-Button-1>', on_double_click)
-    dob_month.insert(0, 'Month' if not edit else datas[6][1]) ; dob_month.bind('<Double-Button-1>', on_double_click)
-    dob_year.insert(0, 'Year' if not edit else datas[6][0]) ; dob_year.bind('<Double-Button-1>', on_double_click) 
+    email.insert(0, 'Email' if not edit else datas[6]) ; email.bind('<Double-Button-1>', on_double_click)
 
-    doh_date.insert(0, 'Date' if not edit else datas[8][2] if lower else datas[9][2]) ; doh_date.bind('<Double-Button-1>', on_double_click)
-    doh_month.insert(0, 'Month' if not edit else datas[8][1] if lower else datas[9][1]) ; doh_month.bind('<Double-Button-1>', on_double_click)
-    doh_year.insert(0, 'Year' if not edit else datas[8][0] if lower else datas[9][0]) ; doh_year.bind('<Double-Button-1>', on_double_click)
+    dob_date.insert(0, 'Date' if not edit else datas[7][2]) ; dob_date.bind('<Double-Button-1>', on_double_click)
+    dob_month.insert(0, 'Month' if not edit else datas[7][1]) ; dob_month.bind('<Double-Button-1>', on_double_click)
+    dob_year.insert(0, 'Year' if not edit else datas[7][0]) ; dob_year.bind('<Double-Button-1>', on_double_click) 
 
-    if lower: # fields specific to employee
-      
-        emp_type.insert(0, 'Employement Type' if not edit else datas[7]) ; emp_type.bind('<Double-Button-1>', on_double_click)
-        
-        name_1.insert(0, 'Name' if not edit else datas[9]) ; name_1.bind('<Double-Button-1>', on_double_click)
-        phone_no_1.insert(0, '+971 ' if not edit else '+971 ' + datas[10])
+    doh_date.insert(0, 'Date' if not edit else datas[8][2]) ; doh_date.bind('<Double-Button-1>', on_double_click)
+    doh_month.insert(0, 'Month' if not edit else datas[8][1]) ; doh_month.bind('<Double-Button-1>', on_double_click)
+    doh_year.insert(0, 'Year' if not edit else datas[8][0]) ; doh_year.bind('<Double-Button-1>', on_double_click)
+    
+    name_1.insert(0, 'Name' if not edit else datas[9]) ; name_1.bind('<Double-Button-1>', on_double_click)
+    phone_no_1.insert(0, '+971 ' if not edit else '+971 ' + datas[10])
 
-        def get_country_code(event):
+    def get_country_code(event):
 
-            if nationality.get() in countries:
-                
-                country_code = nationality_contry_code[countries.index(nationality.get())][1]
+        if nationality.get() in countries:
             
-                event.widget.delete(0, tk.END)
-                event.widget.insert(0, country_code + ' ')
+            country_code = nationality_contry_code[countries.index(nationality.get())][1]
+        
+            event.widget.delete(0, tk.END)
+            event.widget.insert(0, country_code + ' ')
 
-        name_2.insert(0, 'Name' if not edit else datas[11]) ; name_2.bind('<Double-Button-1>', on_double_click)
-        phone_no_2.insert(0, '+' if not edit else f'{data[12]}  {datas[13]}') ; phone_no_2.bind('<Button-1>', get_country_code)
+    name_2.insert(0, 'Name' if not edit else datas[11]) ; name_2.bind('<Double-Button-1>', on_double_click)
+    phone_no_2.insert(0, '+' if not edit else f'{datas[12]}  {datas[13]}') ; phone_no_2.bind('<Button-1>', get_country_code)
+
+    if lower:
+        emp_type.insert(0, 'Employement Type' if not edit else datas[14]) ; emp_type.bind('<Double-Button-1>', on_double_click)
+        branch.insert(0, 'Branch' if not edit else datas[15]) ; branch.bind('<Double-Button-1>', on_double_click)
+        dept.insert(0, 'Department' if not edit else datas[16]) ; dept.bind('<Double-Button-1>', on_double_click)
 
     if not lower: # fields specific to administrator
         
-        position.insert(0, 'Position' if not edit else datas[7]) ; position.bind('<Double-Button-1>', on_double_click)
-        salary.insert(0, 'Salary' if not edit else datas[8]) ; salary.bind('<Double-Button-1>', on_double_click)
+        position.insert(0, 'Position' if not edit else datas[14]) ; position.bind('<Double-Button-1>', on_double_click)
+        salary.insert(0, 'Salary' if not edit else datas[15]) ; salary.bind('<Double-Button-1>', on_double_click)
 
     #defining buttons
     Back_button = tk.Button(window, text = 'Back', command = back, padx = 10, pady = 10)
     Clear_button = tk.Button(window, text = 'Clear Form', command = lambda: clear(datas = datas if edit else None), padx = 10, pady = 10)
-    Next_button = tk.Button(window, text = 'Next', command = add, padx = 10, pady = 10)
+    Next_button = tk.Button(window, text = 'Register' if not edit else 'Update', command = add, padx = 10, pady = 10)
 
     #packing the buttons
-    Back_button.pack(padx = 5, pady = 5, fill = 'x', side = tk.LEFT, expand = True)
-    Clear_button.pack(padx = 5, pady = 5, fill = 'x', side = tk.LEFT, expand = True)
-    Next_button.pack(padx = 5, pady = 5, fill = 'x', side = tk.RIGHT, expand = True)
+    Back_button.pack(padx = 5, pady = 5, fill = 'x', side = 'left', expand = True)
+    Clear_button.pack(padx = 5, pady = 5, fill = 'x', side = 'left', expand = True)
+    Next_button.pack(padx = 5, pady = 5, fill = 'x', side = 'right', expand = True)
 
     #adding hover effect on the buttons
     hover(window)
 
+    dark_theme(window)
+    for frame in window.winfo_children():
+        dark_theme(frame)
+
     window.mainloop() # looping the screen
 
-def generated_data(first_name, lower = True):
+def new_x_edit_client():
+    pass
+
+def change_dealership():
+    pass
+
+def generated_data(Values):
 
     def next_func():
-        pass
+        
+        window.destroy()
+        tk.messagebox.showinfo(title = 'Registered', message = 'Employee Registered')
     
     window = tk.Tk()
     window.title('Generated Data')
@@ -980,11 +1189,10 @@ def generated_data(first_name, lower = True):
     frame_2 = tk.LabelFrame(window, bd  = 5, relief = 'groove')
     frame_2.pack(padx = 5, pady = 5, fill = 'both')
 
-    Labels = ['Employee Code', 'Email', 'Password', 'Attendance Passcode', 'Login Password']
-    Values = code_passcode_generator(first_name)
-    texts = ['Note', 'Keep these data safe. Do not Share.', 'Once lost, Contact Administrators', None, None]
+    Labels = ['Employee Code', 'Attendance Passcode', 'Login Password']
+    texts = ['Note', 'Keep these data safe. Do not Share.', 'Once lost, Contact Administrators']
 
-    for label, value, text, row in zip(Labels, Values, texts, range(5)):
+    for label, value, text, row in zip(Labels, Values, texts, range(4)):
 
         Label = tk.Label(frame_1, text = label + ' :', font = ('Arial', 9, 'bold'))
         Label.grid(row = row, column = 0, padx = 5, pady = 5, sticky = 'e')
@@ -1007,14 +1215,16 @@ def generated_data(first_name, lower = True):
     frame_1.grid_columnconfigure('all', weight = 1)
     frame_2.grid_columnconfigure('all', weight = 1)
 
+    dark_theme(window)
+    dark_theme(frame_1)
+    dark_theme(frame_2)
+
     window.mainloop()
 
-def code_passcode_generator(first_name, lower = True):
+def code_passcode_generator(lower = True):
     
     strs = 'abcdefghijkmnopqrstuvwxyz0123456789'
     code = str(random.randint(10000000, 99999999))
-    email = first_name.lower()[:4] + str(code)[-4:] + '@gmail.com'
-    password = first_name[:4] + '@' + str(code)[:4]
     passcode = ''
 
     for i in range(8):
@@ -1025,20 +1235,253 @@ def code_passcode_generator(first_name, lower = True):
                    WHERE Employee_Code = {code} OR Attendance_Passcode = '{passcode}'""")
     
     if not lower:
-        cursor.execute(f"""SELECT Employee_Code FROM Administrator_Database
-                       WHERE Employee_Code = {code}""")
+        cursor.execute(f"""SELECT Employee_Code FROM Administrator
+                       WHERE Administrator_Code = {code}""")
         
     existing = True if cursor.fetchone() is not None else False
 
     if existing:
         code_passcode_generator()
         
-    return [code, email, password, passcode, '12345678'] if lower else [code, email, password, 'a1b2c3d4']
+    return [code, passcode, '12345678'] if lower else [code, 'a1b2c3d4']
 
-def read_datas():
-    pass
+def read_datas(from_window = None, from_function = None, from_code = None, from_name = None, min = 0, 
+               lower = True, client = False, emp_code = None, dept = None, indices = [0,2,3,4,5,6,7,8,1,9,10,11,12,13,14]):
 
-def read_data():
+    def back_func(homepage = True):
+        
+        window.destroy()
+
+        if homepage:
+            from_function(from_code, from_name)
+        
+        else:
+            from_function(emp_code, lower = True)
+
+    def next_func():
+        
+        window.withdraw()
+        read_datas(from_window, from_function, from_code, from_name, min = min + 20, 
+                        lower = lower, client = client, emp_code = emp_code, dept = dept, indices = indices)
+
+    def prev_func():
+            
+        window.withdraw()
+        read_datas(from_window, from_function, from_code, from_name, min = min - 20, 
+                   lower = lower, client = client, emp_code = emp_code, dept = dept, indices = indices)
+
+    #table definition
+    table = 'Administrator' if not lower else 'Client_Database' if client else 'Employee'
+
+    # header row
+    cursor.execute(f'SHOW COLUMNS FROM {table}')
+    header_row = [header[0] for header in cursor.fetchall()]
+
+    # MySQL statement for retrieving data
+    statement = f"""SELECT * FROM {table} WHERE Employee_Code = {emp_code}""" if emp_code is not None else f"""
+    SELECT * FROM {table} WHERE Department = '{dept}'""" if dept is not None else f"""SELECT * FROM {table}"""
+
+    # Datas
+    cursor.execute(statement)
+    datas = (cursor.fetchall())[min::]
+
+    # Check weather any data exists
+    if not datas or not header_row:
+        tk.messagebox.showerror(title = 'Error', message = 'Data not found')
+        return
+    
+    # destroying from function
+    from_window.destroy()
+    
+    # Screen Definition
+    window = tk.Tk()
+    window.title('Data')
+
+    timeframe(window)
+
+    #frame definition
+    frame = tk.Frame(window, bd = 5, relief = 'groove')
+    frame.pack(padx = 5, pady = 5, fill = 'both')
+
+    # gridding the header row and divider between data and header as per given indices
+    for index, column in zip(indices, range(len(indices))):
+
+        #gridding header
+        header_label = tk.Label(frame, text = header_row[index], font = ('Arial', 9, 'bold', 'underline'))
+        header_label.grid(row = 0, column = column, padx = 1, pady = 3, sticky = 'ew')
+
+    data_count = 0
+
+    while data_count < 20 and data_count != len(datas):
+
+        for index, column in zip(indices, range(len(indices))):
+
+            data_label = tk.Label(frame, text = datas[data_count][index])
+            data_label.grid(row = data_count + 1, column = column, padx = 1, pady = 3, sticky = 'ew')
+
+        data_count += 1
+
+    button_back = tk.Button(window, text = 'Employee Data' if from_function is not None else 'Exit', 
+                            command = back_func if from_function is None else lambda : back_func(False), 
+                            padx = 10, pady = 10)
+    
+    button_next = tk.Button(window, text = 'Next Page',  command = next_func, padx = 10, pady = 10)
+    button_previous = tk.Button(window, text = 'Previous Page',  command = prev_func, padx = 10, pady = 10)
+
+    button_back.pack(padx = 5, pady = 5, side = 'left', fill = 'both', expand = True)
+
+    if (min == 0 or min + 20 < min + len(datas)) and len(datas) > 20:
+        button_next.pack(padx = 5, pady = 5, side = 'right', fill = 'both', expand = True)
+    
+    if min >= 20:
+        button_previous.pack(padx = 5, pady = 5, side = 'left', fill = 'both', expand = True)
+
+    if from_function == read_data and min + 20 > min + len(datas):
+
+        button_exit = tk.Button(window, text = 'Exit', command = back_func, padx = 10, pady = 10)
+        button_exit.pack(padx = 5, pady = 5, side = 'right', fill = 'both', expand = True)
+
+    frame.grid_columnconfigure('all', weight = 1)
+
+    dark_theme(window)
+    dark_theme(frame)
+
+    window.mainloop()
+
+def read_data(emp_code, from_function = None, from_code = None, from_name = None, lower = True):
+
+    def back_func():
+        
+        window.destroy()
+        from_function(from_code, from_name)
+    
+    def next_func():
+        read_datas(from_window = window, from_function = read_data, client = True, emp_code = emp_code)
+    
+    table = 'Administrator' if not lower else 'Employee'
+
+    datas = ['Employee_Code', 'First_Name', 'Last_Name', 'Gender', 'Age', 'Nationality', 'Date_Of_Birth',
+             'Phone_Number', 'Email', 'Position', 'Salary', 'Date_Of_Hire', 'Emg_Contact_1_Name',
+             'Emg_Contact_1_Phone_Number', 'Emg_Contact_2_Name', 'Country_Code', 'Emg_Contact_2_Phone_Number']
+    
+    datas = datas + ['Employment_Type', 'Branch', 'Department'] if lower else datas
+
+    for data, index in zip(datas, range(len(datas))):
+
+        cursor.execute(f'SELECT {data} FROM {table} WHERE Employee_Code = {emp_code}')
+        _data = cursor.fetchone()
+        
+        if _data is not None:
+            datas[index] = (data.replace('_', ' '), _data[0])
+
+        else:
+            tk.messagebox.showerror(title = 'Error', message = 'Data Not Found')
+            back_func()
+
+    window = tk.Tk()
+    window.title('Data')
+
+    timeframe(window)
+
+    emp_data_frame = tk.LabelFrame(window, bd = 5, relief = 'groove', text = 'Employee Data')
+    job_data_frame = tk.LabelFrame(window, bd = 5, relief = 'groove', text = 'Job Details')
+    emg_data_frame = tk.LabelFrame(window, bd = 5, relief = 'groove', text = 'Emergency Contact Details')
+
+    emp_data_frame.pack(padx = 5, pady = 5, fill = 'both')
+    job_data_frame.pack(padx = 5, pady = 5, fill = 'both')
+    emg_data_frame.pack(padx = 5, pady = 5, fill = 'both')
+
+    emp_data = datas[0:9]
+    job_data = datas[9:12] if not lower else datas[9:12] + datas[17:20]
+
+    emp_data[1] = ('Name', f'{emp_data[1][1]} {emp_data[2][1]}')
+    emp_data.pop(2)
+
+    row, column = 0, 0
+
+    for data in emp_data:
+        
+        label = tk.Label(emp_data_frame, text = f'{data[0]} :', font = ('Arial', 9, 'bold'))
+        label.grid(row = row, column = column, padx = 5, pady = 5, sticky = 'e')
+
+        value = tk.Label(emp_data_frame, text = data[1])
+        value.grid(row = row, column = column + 1, padx = 5, pady = 5, sticky = 'w')
+
+        if column + 2 < 5:
+            seperator = tk.Label(emp_data_frame, text = '|', font = 'bold')
+            seperator.grid(row = row, column = column + 2, padx = 5, pady = 5, sticky = 'ew')
+
+        column = column + 3 if column + 3 < 6 else 0
+        row = row + 1 if column == 0 else row
+
+    row, column = 0, 0
+
+    for data in job_data:
+        
+        label = tk.Label(job_data_frame, text = f'{data[0]} :', font = ('Arial', 9, 'bold'))
+        label.grid(row = row, column = column, padx = 5, pady = 5, sticky = 'e')
+
+        value = tk.Label(job_data_frame, text = data[1])
+        value.grid(row = row, column = column + 1, padx = 5, pady = 5, sticky = 'w')
+
+        if column + 2 < 7:
+            seperator = tk.Label(job_data_frame, text = '|', font = 'bold')
+            seperator.grid(row = row, column = column + 2, padx = 5, pady = 5, sticky = 'ew')
+
+        column = column + 3 if column + 3 < 9 else 0
+        row = row + 1 if column == 0 else row
+
+    emg_data = ['Contact-1', ('Name : ', datas[12][1]), ('Phone Number : ', datas[13][1]),
+                'Contact-2', ('Name : ', datas[14][1]), ('Phone Number : ', f'{datas[15][1]} {datas[16][1]}')]
+    
+    row, column = 0, 0
+
+    for data in emg_data:
+
+        if not isinstance(data, tuple):
+
+            label = tk.Label(emg_data_frame, text = data, font = ('Arial', 9, 'bold', 'underline'))
+            label.grid(row = row, column = 0, columnspan = 5, padx = 5, pady = 5, sticky = 'ew')
+
+            column = 0
+            row += 1
+        
+        if isinstance(data, tuple):
+
+            label = tk.Label(emg_data_frame, text = f'{data[0]} :', font = ('Arial', 9, 'bold'))
+            label.grid(row = row, column = column, padx = 5, pady = 5, sticky = 'e')
+
+            value = tk.Label(emg_data_frame, text = data[1])
+            value.grid(row = row, column = column + 1, padx = 5, pady = 5, sticky = 'w')
+
+            if column + 2 < 5:
+                seperator = tk.Label(emg_data_frame, text = '|', font = 'bold')
+                seperator.grid(row = row, column = column + 2, padx = 5, pady = 5, sticky = 'ew')
+
+            column = column + 3 if column + 3 < 6 else 0
+            row = row + 1 if column == 0 else row
+
+
+    button_back = tk.Button(window, text = 'Back', command = back_func, padx = 10, pady = 10)
+    button_back.pack(padx = 5, pady = 5, side = 'left', fill = 'both', expand = True)
+
+    if lower:
+        button_next = tk.Button(window, text = 'Client Details', command = next_func, padx = 10, pady = 10)
+        button_next.pack(padx = 5, pady = 5, side = 'right', fill = 'both', expand = True)
+
+    emp_data_frame.grid_columnconfigure('all', weight = 1)
+    job_data_frame.grid_columnconfigure('all', weight = 1)
+    emg_data_frame.grid_columnconfigure('all', weight = 1)
+
+    dark_theme(window)
+    dark_theme(emp_data_frame)
+    dark_theme(job_data_frame)
+    dark_theme(emg_data_frame)
+    
+
+    window.mainloop()
+
+def read_client_data():
     pass
 
 def read_att_datas():
@@ -1047,19 +1490,86 @@ def read_att_datas():
 def read_att_data():
     pass
 
-def read_messages():
+def read_messages_appeals():
     pass
 
 def draft_message():
     pass
 
-def draft_appeals():
-    pass
+def draft_appeals(emp_code):
 
-def sal_position(ad_emp_code, ad_first_name):
+    def back_func():
+        
+        window.destroy()
+        Employee(emp_code, from_data[1])
 
-    cursor.execute("""SELECT Employee_Code, First_Name, Last_Name FROM Employee_Database
-                   WHERE Salary OR Position IS NULL""")
+    def next_func():
+        
+        _position = position.get()
+        _Appeal_reason = Appeal_reason.get()
+        _letter = letter.get('1.0', tk.END)
+        
+        cursor.execute(f"""INSERT INTO Appeals (To_Position, From_Employee_Code, From_Name,
+                       From_Position, Appeal_Reason, Letter)
+                       VALUES ('{_position}', {from_data[0]}, '{from_data[1]} {from_data[2]}',
+                       '{from_data[3]}', '{_Appeal_reason}', '{_letter}')""")
+        
+        connection.commit()
+        
+        tk.messagebox.showinfo(message = 'Appeal Registered', title = 'Info')
+        back_func()
+
+    cursor.execute('SELECT DISTINCT(Position) FROM Administrator')
+    positions = [position[0] for position in cursor.fetchall()]
+
+    reasons = ['Promotion', 'Incrementation', 'Leave', 'Resignation']
+
+    cursor.execute(f"""SELECT Employee_Code, First_Name, Last_Name, Position
+                   FROM Employee
+                   WHERE Employee_Code = {emp_code}""")
+    
+    from_data = cursor.fetchone()
+    
+    window = tk.Tk()
+    window.title('Draft Appeals')
+
+    timeframe(window)
+
+    frame = tk.Frame(window, bd = 5, relief = 'groove')
+    frame.pack(padx = 5, pady = 5, fill = 'both')
+
+    position = ttk.Combobox(frame, width = 50, values = positions)
+    Appeal_reason = ttk.Combobox(frame, width = 50, values = reasons)
+    letter = tk.Text(frame, width = 39, height = 10)
+
+    Labels = [('Position :', position), ('Appeal Reason :', Appeal_reason), ('Letter : ', letter)]
+
+    for label, row in zip(Labels, range(3)):
+
+        Label = tk.Label(frame, text = label[0], font = ('Arial', 9, 'bold'))
+        Label.grid(row = row, column = 0, padx = 5, pady = 5, sticky = 'e')
+
+        label[1].grid(row = row, column = 1, padx = 5, pady = 5, sticky = 'w')
+
+    button_back = tk.Button(window, text = 'Back', command = back_func, padx = 20, pady = 20)
+    button_next = tk.Button(window, text = 'Compose', command = next_func, padx = 20, pady = 20)
+
+    button_back.pack(padx = 5, pady = 5, side = 'left', fill = 'both', expand = True)
+    button_next.pack(padx = 5, pady = 5, side = 'right', fill = 'both', expand = True)
+
+    frame.grid_columnconfigure('all', weight = 1)
+
+    hover(window)
+
+    dark_theme(window)
+    dark_theme(frame)
+
+    window.mainloop()
+
+def sal_position(from_window, ad_emp_code):
+
+    cursor.execute("""SELECT Employee_Code, First_Name, Last_Name FROM Employee
+                   WHERE Position OR Salary IS NULL""")
     
     datas = cursor.fetchall()
 
@@ -1067,6 +1577,8 @@ def sal_position(ad_emp_code, ad_first_name):
         
         tk.messagebox.showinfo(title = 'No Data Found', message = 'No new registration has been found')
         return
+    
+    #from_window.destroy()
     
     for data in datas:
 
@@ -1079,9 +1591,11 @@ def sal_position(ad_emp_code, ad_first_name):
                 tk.messagebox.showerror(title = 'Error', message = 'Invalid Entry')
                 return
 
-            cursor.execute(f"""UPDATE Employee_Database
+            cursor.execute(f"""UPDATE Employee
                            SET Salary = {int(salary)}, Position = '{position}'
                            WHERE Employee_Code = {data[0]}""")
+
+            connection.commit()
             
             if data != datas[-1]:
                 window.destroy()
@@ -1090,16 +1604,18 @@ def sal_position(ad_emp_code, ad_first_name):
             else:
                 window.destroy()
                 tk.messagebox.showinfo(title = 'All Done', message = 'All Data Has Been Added')
-                Administrator(ad_emp_code, ad_first_name)
+                Administrator(ad_emp_code)
                 return
 
         def back_func():
             window.destroy()
-            Administrator(ad_emp_code, ad_first_name)
+            Administrator(ad_emp_code)
             return
 
         window = tk.Tk()
         window.title('Manage Salary and Position')
+
+        timeframe(window)
         
         window.minsize(width = 400, height = 100)
 
@@ -1120,17 +1636,18 @@ def sal_position(ad_emp_code, ad_first_name):
         new_data = tk.LabelFrame(window, relief = 'groove', bd = 5, text = 'New Data')
         new_data.pack(padx = 5, pady = 5, fill = 'both')
 
-        label = tk.Label(new_data, text = 'Position : ', font = ('Arial', 9, 'bold'))
-        label.grid(row = 0, column = 0, padx = 15, pady = 10, sticky = 'e')
-
-        label = tk.Label(new_data, text = 'Salary : ', font = ('Arial', 9, 'bold'))
-        label.grid(row = 1, column = 0, padx = 15, pady = 10, sticky = 'e')
-
         Position = tk.Entry(new_data, width = 30)
-        Position.grid(row = 0, column = 1, padx = 15, pady = 10, sticky = 'w')
-        
         Salary = tk.Entry(new_data, width = 30)
-        Salary.grid(row = 1, column = 1, padx = 15, pady = 10, sticky = 'w')
+
+        labels = ['Position : ', 'Salary : ']
+        widgets = [Position, Salary]
+
+        for label, widget, row in zip(labels, widgets, range(2)):
+
+            Label = tk.Label(new_data, text = label, font = ('Arial', 9, 'bold'))
+            Label.grid(row = row, column = 0, padx = 10, pady = 10, sticky = 'e')
+
+            widget.grid(row = row, column = 1, padx = 15, pady = 10, sticky = 'w')
 
         details.grid_columnconfigure('all', weight = 1)
         new_data.grid_columnconfigure('all', weight = 1)
@@ -1143,56 +1660,73 @@ def sal_position(ad_emp_code, ad_first_name):
 
         hover(window)
 
+        details.grid_columnconfigure('all', weight = 1)
+        new_data.grid_columnconfigure('all', weight = 1)
+
+        dark_theme(window)
+        dark_theme(details)
+        dark_theme(new_data)
+
         window.mainloop()
 
-def new_postion():
-    pass
-def new_position_or_salary(_salary  = True, increment = True, promote = True):
-
+def new_position_or_salary(_position = False, increment = True):
+    
+    def next_func():
+        pass
 
     def back_func():
         pass
 
-    def next_func():
-        
-        Emp_code = emp_code.get()
-        Change = salary.get()
-
-        if not Change.isdigit() or Change == '' or Change > 100 or not Emp_code.isdigit() or Emp_code == '':
-            tk.messagebox.showerror(title = 'Error', message = 'Invalid Entry')
-            return
-        
-        Change, Emp_code = int(Change) / 100, int(Emp_code)
-
-        statement = ''
-
-        cursor.execute(statement)
+    title = 'Promotion' if _position and increment else 'Demotion' if _position and not increment else 'Incrementation' if not _position and increment else 'Decrementation'
 
     window = tk.Tk()
-    window.title('Incrementation' if increment else 'Decrementation')
+    window.title(title)
 
-    window.minsize(width = 400, height = 100)
+    timeframe(window)
 
-    frame = tk.LabelFrame(window, relief = 'groove', bd = 5)
+    frame = tk.Frame(window, bd = 5, relief = 'groove', height = 50)
     frame.pack(padx = 5, pady = 5, fill = 'both')
 
-    emp_code_Lab = tk.Label(frame, text = 'Employee Code [ Of The Employee ] : ', font = ('Arial', 9, 'bold'))
-    emp_code_Lab.grid(row = 0, column = 0, padx = 5, pady = 5, sticky = 'e')
+    sal_lab = 'New Salary : ' if _position else 'Increment [ in % ] : ' if increment else 'Decrement [ in % ]'
+    labels = ['Employee Code : ', sal_lab, 'New Position : ']
 
-    emp_code = tk.Entry(frame, width = 40)
-    emp_code.grid(row = 0, column = 1, padx = 5, pady = 5, sticky = 'w')
+    row = 0
+    for label in labels:
 
-    salary_Lab = tk.Label(frame, text = 'Incrementation [ in % ] : ' if increment else 'Decrementation [ in % ] :', font = ('Arial', 9, 'bold'))
-    salary_Lab.grid(row = 1, column = 0, padx = 5, pady = 5, sticky = 'e')
+        if not _position and label == 'New Position : ':
+            continue
 
-    salary = tk.Entry(frame, width = 40)
-    salary.grid(row = 1, column = 1, padx = 5, pady = 5, sticky = 'w')
+        Label = tk.Label(frame, text = label, font = ('Arial', 9, 'bold'))
+        Label.grid(row = row, column = 0, padx = 5, pady = 5, sticky = 'e')
+        row += 1
 
-    next_button = tk.Button(window, text = 'Next', command = next_func, padx = 10, pady = 10)
-    next_button.pack(padx = 5, pady = 5, fill = 'both', expand = True, side = 'left')
+    emp_code = tk.Entry(frame, width = 50)
+    position = tk.Entry(frame, width = 50)
+    salary = tk.Entry(frame, width = 50)
 
-    back_button = tk.Button(window, text = 'Next', command = back_func, padx = 10, pady = 10)
-    back_button.pack(padx = 5, pady = 5, fill = 'both', expand = True, side = 'right')
+    widgets = [emp_code, position, salary]
+
+    row = 0
+    for widget in widgets:
+        
+        if not _position and widget == position:
+            continue
+
+        widget.grid(row = row, column = 1, padx = 5, pady = 5, sticky = 'w')
+        row += 1
+
+    frame.grid_columnconfigure('all', weight = 1)
+
+    button_back = tk.Button(window, text = 'Back', command = back_func, padx = 10, pady = 10)
+    button_next = tk.Button(window, text = 'Update', command = next_func, padx = 10, pady = 10)
+
+    button_back.pack(padx = 5, pady = 5, side = 'left', fill = 'both', expand = True)
+    button_next.pack(padx = 5, pady = 5, side = 'right', fill = 'both', expand = True)
+
+    hover(window)
+
+    dark_theme(window)
+    dark_theme(frame)
 
     window.mainloop()
 
@@ -1212,16 +1746,7 @@ def compose_email():
 
     # real time date and time packing
     
-    datetime_frame = tk.Frame(window)
-    datetime_frame.pack(padx = 5, pady = 1, fill = 'both')
-
-    time = tk.Label(datetime_frame, font = ('Arial', 10, 'bold'))
-    date = tk.Label(datetime_frame, font = ('Arial', 10, 'bold'))
-
-    time.pack(padx = 5, pady = 3, side = 'right')
-    date.pack(padx = 5, pady = 3, side = 'left')
-
-    update_time(datetime_frame, time, date)
+    timeframe(window)
 
     # function code
 
@@ -1287,13 +1812,108 @@ def compose_email():
     hover(window)
 
     dark_theme(window)
-    dark_theme(datetime_frame)
     dark_theme(to_details)
     dark_theme(from_details)
 
     window.mainloop()
 
 def conduct_poll():
-    pass
 
-compose_email()
+    def next_func():
+        pass
+
+    def back_func():
+        pass
+    
+    window = tk.Tk()
+    window.title('Conduct Poll')
+
+    timeframe(window)
+
+    frame = tk.Frame(window, bd = 5, relief = 'groove')
+    frame.pack(padx = 5, pady = 5, fill = 'both')
+
+    labels = ['Matter', 'Option 1', ' Option 2', 'Option 3', 'Option 4', 'Option 5']
+
+    matter = tk.Text(frame, width = 50, height = 10)
+    option_1 = tk.Entry(frame, width = 50)
+    option_2 = tk.Entry(frame, width = 50)
+    option_3 = tk.Entry(frame, width = 50)
+    option_4 = tk.Entry(frame, width = 50)
+    option_5 = tk.Entry(frame, width = 50)
+
+    widgets = [matter, option_1, option_2, option_3, option_4, option_5]
+
+    for label, widget, row in zip(labels, widgets, range(6)):
+
+        Label = tk.Label(frame, text = label + ' : ', font = ('Arial', 9, 'bold'))
+        Label.grid(row = row, column = 0, padx = 5, pady = 5, sticky = 'ew')
+
+        widget.grid(row = row, column = 1, padx = 5, pady = 5, sticky = 'ew')
+
+    button_back = tk.Button(window, text = 'Back', command = back_func, padx = 20, pady = 20)
+    button_next = tk.Button(window, text = 'Add Poll', command = next_func, padx = 20, pady = 20)
+
+    button_back.pack(padx = 5, pady = 5, side = 'left', fill = 'both', expand = True)
+    button_next.pack(padx = 5, pady = 5, side = 'right', fill = 'both', expand = True)
+
+    frame.grid_columnconfigure('all', weight = 1)
+
+    hover(window)
+
+    dark_theme(window)
+    dark_theme(frame)
+
+    window.mainloop()
+
+def attend_poll():
+    
+    def next_func():
+        pass
+
+    def back_func():
+        pass
+
+    def option_click(n):
+        pass
+
+    window = tk.Tk()
+    window.title('Conduct Poll')
+
+    timeframe(window)
+
+    frame = tk.Frame(window, bd = 5, relief = 'groove')
+    frame.pack(padx = 5, pady = 5, fill = 'both')
+
+    labels = ['Matter', 'Option 1', ' Option 2', 'Option 3', 'Option 4', 'Option 5', 'Skip Vote']
+    
+    for label, index in zip(labels, range(len(labels))):
+
+        cursor.execute(f"""SELECT {label.replace(' ', '_')} FROM Poll WHERE Status = 'Ongoing'""")
+        labels[index] = (label, cursor.fetchall()[-1][0])
+
+    matter_frame = tk.Frame(frame)
+    matter_frame.grid(row = 0, column = 0, columnspan = 2, sticky = 'ew')
+
+    matter_lab = tk.Label(matter_frame, text = 'Topic : ', font = ('Arial', 9, 'bold'))
+    matter_lab.grid(row = 0, column = 0, padx = 5, pady = 5, sticky = 'e')
+
+    matter_lab = tk.Label(matter_frame, text = labels[0][1])
+    matter_lab.grid(row = 0, column = 1, padx = 5, pady = 5, sticky = 'w')
+
+    
+
+    button_back = tk.Button(window, text = 'Back', command = back_func, padx = 20, pady = 20)
+    button_next = tk.Button(window, text = 'Add Poll', command = next_func, padx = 20, pady = 20)
+
+    button_back.pack(padx = 5, pady = 5, side = 'left', fill = 'both', expand = True)
+    button_next.pack(padx = 5, pady = 5, side = 'right', fill = 'both', expand = True)
+
+    frame.grid_columnconfigure('all', weight = 1)
+
+    hover(window)
+
+    dark_theme(window)
+    dark_theme(frame)
+
+    window.mainloop()
