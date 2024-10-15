@@ -481,6 +481,9 @@ def Administrator(emp_code): # administrator interface
     
     frame.grid_columnconfigure('all', weight = 1)
 
+    dark_theme(window)
+    dark_theme(frame)
+
     window.mainloop() # looping the main screen
 
 def Employee(emp_code): # employee interface
@@ -510,7 +513,7 @@ def Employee(emp_code): # employee interface
               'compose an email',
               'read messages', 
               'draft appeals', 
-              'vote for exisiting pole',
+              'vote for exisiting poll',
               'exit']
     
     #buttone functions
@@ -540,6 +543,9 @@ def Employee(emp_code): # employee interface
     
     #adapting to resizing
     frame.grid_columnconfigure('all', weight = 1)
+
+    dark_theme(window)
+    dark_theme(frame)
 
     window.mainloop() #looping the window
 
@@ -1165,8 +1171,22 @@ def new_x_edit_reg(from_window, from_function = None, from_code = None, emp_code
 
     window.mainloop() # looping the screen
 
-def new_x_edit_client():
-    pass
+def new_x_edit_client(from_window, from_function, from_code, client_code = None, edit = False):
+    
+    #from_window.destroy()
+
+    def back_func():
+        pass
+
+    def add_func():
+        pass
+
+    window = tk.Tk()
+    window.title('Add Client' if not edit else 'Edit Client Data')
+
+    
+
+    window.mainloop()
 
 def change_dealership():
     pass
@@ -1484,20 +1504,284 @@ def read_data(emp_code, from_function = None, from_code = None, from_name = None
 def read_client_data():
     pass
 
-def read_att_datas():
-    pass
+def get_month(from_window, from_function, from_code, all = False, default_code = None):
 
-def read_att_data():
-    pass
+    #from_window.destroy()
+
+    def back_func():
+        
+        window.destroy()
+        from_function(from_code)
+
+    def next_func():
+        
+        if not all and from_function == Employee:
+            code = int(default_code)
+        
+        elif not all:
+            code = int(emp_code.get()) if (emp_code.get()).isdigit() else None
+
+        _year = year.get() if (year.get()).isdigit() else None
+        _month = month.get() if (month.get()).isdigit() else None
+
+        datas = [code, _year, _month] if not all else [_year, _month]
+
+        if any(data is None for data in datas):
+            tk.messagebox.showerror(title = 'Error', message = 'Incorrect datatype entered')
+            return
+        
+        cursor.execute(f"""SHOW COLUMNS FROM Attendance_Sheet
+                       WHERE Field LIKE '{_year}-{_month}-%'
+                       OR Field = 'Employee_Code'""")
+    
+        headers = [header[0] for header in cursor.fetchall()]
+
+        if len(headers) < 2:
+            tk.messagebox.showerror(message = 'Data with corresponding Date format\nwas not found', title = 'Error')
+            return
+        
+        if all:
+
+            headers.insert(1, 'First_Name')
+            headers.insert(2, 'Last_Name')
+
+            cursor.execute(f"""SELECT E.`{'`, `'.join(headers)}` FROM Attendance_Sheet A
+                           JOIN Employee E
+                           WHERE A.Employee_Code = E.Employee_Code""")
+            datas = cursor.fetchall()
+
+            if not any(datas):
+                tk.messagebox.showerror(title = 'Error', message = 'No existing data was found')
+                return
+            
+            headers[1] = 'Name'
+            headers.pop(2)
+
+            for data, index in zip(datas, range(len(datas))):
+
+                data = list(data)
+                data[1] = f'{data[1]} {data[2]}'
+                data.pop(2)
+
+                datas[index] = data
+
+            read_att_datas(window, from_function, from_code, headers, datas)
+        
+        else:
+            
+            cursor.execute(f"""SELECT {', '.join(headers)} FROM Attendance_Sheet
+                           WHERE Employee_Code = {code}""")
+            datas = cursor.fetchone()
+
+            if datas is None:
+                tk.messagebox.showerror(title = 'Error', message = 'Data with corresponding Employee Code\nwas not found')
+                return
+
+            read_att_data(window, from_function, from_code, headers, datas)
+    
+    window = tk.Tk()
+    window.title('Attendance Data')
+
+    timeframe(window)
+
+    frame = tk.Frame(window, relief = 'groove', bd = 5)
+    frame.pack(padx = 5, pady = 5, fill = 'both')
+
+    if not all and from_function != Employee:
+        emp_code = tk.Entry(frame, width = 25)
+
+    months = ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12']
+
+    month = ttk.Combobox(frame, width = 25, values = months)
+    year = ttk.Combobox(frame, width = 25, values = list(range(2020, datetime.datetime.now().year + 1)))
+
+    labels = ['Employee Code', 'Month', 'Year'] if not all and from_function != Employee else ['Month', 'Year']
+    widgets = [emp_code, month, year] if not all and from_function != Employee else [month, year]
+
+    row, column = 0, 0
+
+    for label, widget in zip(labels, widgets):
+        
+        Label = tk.Label(frame, text = f'{label} :', font = ('Arial', 9, 'bold'))
+        Label.grid(row = row, column = column, padx = 5, pady = 5, sticky = 'ew')
+
+        widget.grid(row = row + 1, column = column, padx = 5, pady = 5, sticky = 'ew')
+
+        if label == 'Employee Code':
+            Label.grid_configure(columnspan = 2)
+            widget.grid_configure(columnspan = 2)
+            column += 1
+
+        column = column + 1 if column + 1 < 2 else 0
+        row = row + 2 if column == 0 else row
+
+    back_button = tk.Button(window, text = 'Back', command = back_func, padx = 10, pady = 10)
+    next_button = tk.Button(window, text = 'Proceed', command = next_func, padx = 10, pady = 10)
+
+    back_button.pack(padx = 5, pady = 5, side = 'left', fill = 'both', expand = True)
+    next_button.pack(padx = 5, pady = 5, side = 'right', fill = 'both', expand = True)
+
+    hover(window)
+
+    frame.grid_columnconfigure('all', weight = 1)
+
+    dark_theme(window)
+    dark_theme(frame)
+
+    window.mainloop()
+
+def read_att_datas(from_window, from_function, from_code, headers, datas, page_count = 0):
+
+    from_window.destroy()
+
+    def back_func():
+        pass
+
+    def next_func():
+        pass
+
+    def prev_func():
+        pass
+
+    window = tk.Tk()
+    window.title('Attendance Datas')
+
+    frame = tk.Frame(window, bd = 5, relief = 'groove')
+    frame.pack(padx = 5, pady = 5, fill = 'both')
+
+    dark_theme(frame)
+
+    for header, column in zip(headers, range(len(headers))):
+        
+        header_lab = tk.Label(frame, text = header[-2:] if header[-2:].isdigit() else header, 
+                              font = ('Arial', 9, 'bold', 'underline'))
+        header_lab.grid(row = 0, column = column, padx = 5, pady = 5, sticky = 'news') 
+
+        if dark:
+                header_lab.config(bg = '#112', fg = 'white')
+
+    datas = datas[page_count * 20::]
+
+    data_count = 0
+
+    while data_count < 20:
+
+        data = datas[data_count]
+
+        for column in range(len(data)):
+
+            data_lab = tk.Label(frame, text = data[column])
+            data_lab.grid(row = data_count + 1, column = column, padx = 5, pady = 5, sticky = 'news') 
+
+            if dark:
+                data_lab.config(bg = '#112', fg = 'white')
+
+            if data[column] == 'A' or data[column] == 'P':
+
+                data_lab.config(font = ('Arial', 9, 'bold'))
+                data_lab.config(fg = '#3CB371' if data[column] == 'P' else '#CD5C5C')
+
+        data_count += 1
+
+    frame.grid_columnconfigure('all', weight = 1) 
+
+    button_back = tk.Button(window, text = 'Exit', command = back_func, padx = 10, pady = 10)
+    
+    button_next = tk.Button(window, text = 'Next Page',  command = next_func, padx = 10, pady = 10)
+    button_previous = tk.Button(window, text = 'Previous Page',  command = prev_func, padx = 10, pady = 10)
+
+    button_back.pack(padx = 5, pady = 5, side = 'left', fill = 'both', expand = True)
+
+    if (page_count + 1) * 20 < len(datas) + page_count*20:
+        pass
+
+    
+
+    dark_theme(window)
+
+    window.mainloop()
+
+def read_att_data(from_window, to_function, to_code, headers, datas):
+
+    from_window.destroy()
+    
+    def back_func():
+
+        window.destroy()
+        to_function(to_code)
+    
+    window = tk.Tk()
+    window.title('Attendance Data')
+
+    timeframe(window)
+
+    cursor.execute(f'''SELECT First_Name, Last_Name FROM Employee
+                   WHERE Employee_Code = {datas[0]}''')
+    name = ' '.join(list(cursor.fetchone()))
+
+    emp_frame = tk.LabelFrame(window, text = 'Employee Details', bd = 5, relief = 'groove')
+    emp_frame.pack(padx = 5, pady = 5, fill = 'both')
+    
+    emp_details = ['Employee Code : ', datas[0], '|', 'Name : ', name]
+    
+    for data, column in zip(emp_details, range(5)):
+
+        label = tk.Label(emp_frame, text = data)
+        label.grid(row = 0, column = column, padx = 5, pady = 5, sticky = 'w')
+
+        if ':' in str(data) or data == '|':
+            label.config(font = ('Arial', 9, 'bold'))
+            label.grid_configure(sticky = 'e' if data != '|' else 'ew')
+
+    att_frame = tk.LabelFrame(window, text = 'Attendance Data', relief = 'groove', bd = 5)
+    att_frame.pack(padx = 5, pady = 5, fill = 'both')
+
+    row, column = 0, 0
+
+    total_columns = (((len(headers[1:]) + 9 ) // 10) * 3 ) - 1
+    
+    for header, data in zip(headers[1:], datas[1:]):
+        
+        date = tk.Label(att_frame, text=f'{header} :', font=('Arial', 9, 'bold'))
+        date.grid(row=row, column=column, padx=5, pady=5, sticky='e')
+
+        stat = 'Present' if data == 'P' else 'Absent'
+        
+        status = tk.Label(att_frame, text=stat)
+        status.grid(row=row, column=column + 1, padx=5, pady=5, sticky='w')
+
+        if column + 3 < total_columns:
+            sep = tk.Label(att_frame, text='|', font=('Arial', 9, 'bold'))
+            sep.grid(row=row, column=column + 2, padx=5, pady=5, sticky='ew')
+
+        row = row + 1 if row + 1 < 10 else 0
+        column = column + 3 if row == 0 else column
+
+    back_button = tk.Button(window, text = 'Back', command = back_func, padx = 10, pady = 10)
+    back_button.pack(padx = 5, pady = 5, fill = 'both', expand = True)
+
+    emp_frame.grid_columnconfigure('all', weight = 1)
+    att_frame.grid_columnconfigure('all', weight = 1)
+
+    hover(window)
+
+    dark_theme(window)
+    dark_theme(emp_frame)
+    dark_theme(att_frame)
+
+    window.mainloop()
 
 def read_messages_appeals():
     pass
 
 def draft_message():
+    
     pass
 
-def draft_appeals(emp_code):
+def draft_appeals(from_window, emp_code):
 
+    from_window.destroy()
+    
     def back_func():
         
         window.destroy()
