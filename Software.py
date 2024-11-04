@@ -1,11 +1,11 @@
 import mysql.connector
 import tkinter as tk
 from hashlib import sha3_256 as hash
-import datetime
 from tkinter import messagebox, ttk
 import random
 from PIL import Image, ImageTk
 import poplib
+from Variables import *
 
 dark = True # flag for dark theme
 
@@ -552,7 +552,7 @@ def Employee(emp_code): # employee interface
 # combined function to add new registeration or edit ones registration for both employee and admisistrator
 def new_x_edit_reg(from_window, from_function = None, from_code = None, emp_code = None, lower = True, edit = False):
     
-    #from_window.destroy()
+    from_window.destroy()
 
     def back(): # back function
         
@@ -605,13 +605,12 @@ def new_x_edit_reg(from_window, from_function = None, from_code = None, emp_code
 
     def add(): # update or add new registration function
         
-        first_name = f_name.get().title() if (f_name.get()).isalpha() else None
-        last_name = l_name.get().title() if (l_name.get()).isalpha() else None
-        _gender = gender.get().title() if (gender.get()).isalpha() else None
-
+        first_name = f_name.get().title() if (f_name.get()).strip() and f_name.get() != 'First Name' else None
+        last_name = l_name.get().title() if (l_name.get()).strip() and l_name.get() != 'Last Name'  else None
+        _gender = gender.get().title() if (gender.get()).strip() and gender.get() != 'Gender'  else None
 
         _age = int(age.get()) if (age.get()).isdigit() else None
-        _nationality = nationality.get().title() if (nationality.get()).isalpha() else None
+        _nationality = nationality.get().title() if (nationality.get()).strip() and nationality.get() != 'Nationality'  else None
         _phone_no = int(phone_no.get()[5:]) if ((phone_no.get())[5:]).isdigit() else None
 
         _email = email.get() if '@' in email.get() and '.com' in email.get() else None
@@ -624,21 +623,21 @@ def new_x_edit_reg(from_window, from_function = None, from_code = None, emp_code
         month_doh = int(doh_month.get()) if (doh_month.get()).isdigit() else None
         year_doh = int(doh_year.get()) if (doh_year.get()).isdigit() else None
 
-        _name_1 = name_1.get() if (name_1.get()).isalpha() else None
+        _name_1 = name_1.get() if (name_1.get()).strip() and name_1.get() != 'Name'  else None
         _contact_1 = (phone_no_1.get()[5:]) if ((phone_no_2.get())[5:]).isdigit() else None
 
-        _name_2 = name_2.get() if (name_2.get()).isalpha() else None
+        _name_2 = name_2.get() if (name_2.get()).strip() and name_2.get() != 'Name'  else None
         country_code = ((phone_no_2.get()).split())[0] if ((((phone_no_2.get()).split())[0])[1:]).isdigit() else None
         contact_2 = int(((phone_no_2.get()).split())[1]) if (((phone_no_2.get()).split())[1]).isdigit() else None
 
         if lower:
-            _emp_type = emp_type.get() if (emp_type.get()).isalpha() else None
-            _branch = branch.get() if (branch.get()).isalpha() else None
-            _dept = dept.get() if (dept.get()).isalpha() else None
+            _emp_type = emp_type.get() if (emp_type.get()).strip() and emp_type.get() != 'Emloyment Type'  else None
+            _branch = branch.get() if (branch.get()).strip() and branch.get() != 'Branch'  else None
+            _dept = dept.get() if (dept.get()).strip() and dept.get() != 'Department'  else None
 
         if not lower:
-            _position = position.get() if (position.get()).isalpha() else None
-            _salary = salary.get() if (salary.get()).isdigit() else None
+            _position = position.get() if (position.get()).strip() and position.get() != 'Position'  else None
+            _salary = salary.get() if (salary.get()).strip() and salary.get() != 'Salary'  else None
 
         datas = [('First_Name', first_name), 
                 ('Last_Name', last_name),
@@ -657,7 +656,7 @@ def new_x_edit_reg(from_window, from_function = None, from_code = None, emp_code
         
         datas = datas + [('Employment_Type', _emp_type), ('Branch', _branch), ('Department', _dept)] if lower else datas + [('Salary', _salary), ('Position', _position)]
 
-        if any(data[1] is None or data[0].replace('_', ' ') == data[1] for data in datas):
+        if any(data[1] is None for data in datas):
 
             print([data for data in datas if data[1] is None])
             tk.messagebox.showerror(title = 'Error', message = 'Invalid Entry')
@@ -711,206 +710,6 @@ def new_x_edit_reg(from_window, from_function = None, from_code = None, emp_code
         
         from_function(from_code)
 
-    current_year = datetime.datetime.now().year # variable to mark current year
-
-    # combobox values for nationalities
-    nationality_contry_code = [
-    ("Afghan", "+93"),
-    ("Albanian", "+355"),
-    ("Algerian", "+213"),
-    ("American", "+1"),
-    ("Andorran", "+376"),
-    ("Angolan", "+244"),
-    ("Antiguan", "+1-268"),
-    ("Argentine", "+54"),
-    ("Armenian", "+374"),
-    ("Australian", "+61"),
-    ("Austrian", "+43"),
-    ("Azerbaijani", "+994"),
-    ("Bahamian", "+1-242"),
-    ("Bahraini", "+973"),
-    ("Bangladeshi", "+880"),
-    ("Barbadian", "+1-246"),
-    ("Barbudan", "+1-268"),
-    ("Batswana", "+267"),
-    ("Belarusian", "+375"),
-    ("Belgian", "+32"),
-    ("Belizean", "+501"),
-    ("Beninese", "+229"),
-    ("Bhutanese", "+975"),
-    ("Bolivian", "+591"),
-    ("Bosnian", "+387"),
-    ("Brazilian", "+55"),
-    ("Bruneian", "+673"),
-    ("Bulgarian", "+359"),
-    ("Burkinabe", "+226"),
-    ("Burmese", "+95"),
-    ("Burundian", "+257"),
-    ("Cambodian", "+855"),
-    ("Cameroonian", "+237"),
-    ("Canadian", "+1"),
-    ("Cape Verdean", "+238"),
-    ("Central African", "+236"),
-    ("Chadian", "+235"),
-    ("Chilean", "+56"),
-    ("Chinese", "+86"),
-    ("Colombian", "+57"),
-    ("Comoran", "+269"),
-    ("Congolese", "+242"),
-    ("Costa Rican", "+506"),
-    ("Croatian", "+385"),
-    ("Cuban", "+53"),
-    ("Cypriot", "+357"),
-    ("Czech", "+420"),
-    ("Danish", "+45"),
-    ("Djiboutian", "+253"),
-    ("Dominican", "+1-767"),
-    ("Dutch", "+31"),
-    ("East Timorese", "+670"),
-    ("Ecuadorean", "+593"),
-    ("Egyptian", "+20"),
-    ("Emirati", "+971"),
-    ("Equatorial Guinean", "+240"),
-    ("Eritrean", "+291"),
-    ("Estonian", "+372"),
-    ("Ethiopian", "+251"),
-    ("Fijian", "+679"),
-    ("Filipino", "+63"),
-    ("Finnish", "+358"),
-    ("French", "+33"),
-    ("Gabonese", "+241"),
-    ("Gambian", "+220"),
-    ("Georgian", "+995"),
-    ("German", "+49"),
-    ("Ghanaian", "+233"),
-    ("Greek", "+30"),
-    ("Grenadian", "+1-473"),
-    ("Guatemalan", "+502"),
-    ("Guinea-Bissauan", "+245"),
-    ("Guinean", "+224"),
-    ("Guyanese", "+592"),
-    ("Haitian", "+509"),
-    ("Herzegovinian", "+387"),
-    ("Honduran", "+504"),
-    ("Hungarian", "+36"),
-    ("Icelander", "+354"),
-    ("Indian", "+91"),
-    ("Indonesian", "+62"),
-    ("Iranian", "+98"),
-    ("Iraqi", "+964"),
-    ("Irish", "+353"),
-    ("Israeli", "+972"),
-    ("Italian", "+39"),
-    ("Ivorian", "+225"),
-    ("Jamaican", "+1-876"),
-    ("Japanese", "+81"),
-    ("Jordanian", "+962"),
-    ("Kazakhstani", "+7"),
-    ("Kenyan", "+254"),
-    ("Kiribati", "+686"),
-    ("Kuwaiti", "+965"),
-    ("Kyrgyz", "+996"),
-    ("Laotian", "+856"),
-    ("Latvian", "+371"),
-    ("Lebanese", "+961"),
-    ("Liberian", "+231"),
-    ("Libyan", "+218"),
-    ("Liechtensteiner", "+423"),
-    ("Lithuanian", "+370"),
-    ("Luxembourger", "+352"),
-    ("Macedonian", "+389"),
-    ("Malagasy", "+261"),
-    ("Malawian", "+265"),
-    ("Malaysian", "+60"),
-    ("Maldivian", "+960"),
-    ("Malian", "+223"),
-    ("Maltese", "+356"),
-    ("Marshallese", "+692"),
-    ("Mauritanian", "+222"),
-    ("Mauritian", "+230"),
-    ("Mexican", "+52"),
-    ("Micronesian", "+691"),
-    ("Moldovan", "+373"),
-    ("Monacan", "+377"),
-    ("Mongolian", "+976"),
-    ("Montenegrin", "+382"),
-    ("Moroccan", "+212"),
-    ("Mozambican", "+258"),
-    ("Namibian", "+264"),
-    ("Nauruan", "+674"),
-    ("Nepalese", "+977"),
-    ("New Zealander", "+64"),
-    ("Nicaraguan", "+505"),
-    ("Nigerien", "+227"),
-    ("Nigerian", "+234"),
-    ("Norwegian", "+47"),
-    ("Omani", "+968"),
-    ("Pakistani", "+92"),
-    ("Palauan", "+680"),
-    ("Panamanian", "+507"),
-    ("Papua New Guinean", "+675"),
-    ("Paraguayan", "+595"),
-    ("Peruvian", "+51"),
-    ("Polish", "+48"),
-    ("Portuguese", "+351"),
-    ("Qatari", "+974"),
-    ("Romanian", "+40"),
-    ("Russian", "+7"),
-    ("Rwandan", "+250"),
-    ("Saint Lucian", "+1-758"),
-    ("Saint Vincentian", "+1-784"),
-    ("Samoan", "+685"),
-    ("San Marinese", "+378"),
-    ("Sao Tomean", "+239"),
-    ("Saudi", "+966"),
-    ("Senegalese", "+221"),
-    ("Serbian", "+381"),
-    ("Seychellois", "+248"),
-    ("Sierra Leonean", "+232"),
-    ("Singaporean", "+65"),
-    ("Slovak", "+421"),
-    ("Slovenian", "+386"),
-    ("Solomon Islander", "+677"),
-    ("Somali", "+252"),
-    ("South African", "+27"),
-    ("South Korean", "+82"),
-    ("South Sudanese", "+211"),
-    ("Spanish", "+34"),
-    ("Sri Lankan", "+94"),
-    ("Sudanese", "+249"),
-    ("Surinamer", "+597"),
-    ("Swazi", "+268"),
-    ("Swedish", "+46"),
-    ("Swiss", "+41"),
-    ("Syrian", "+963"),
-    ("Taiwanese", "+886"),
-    ("Tajik", "+992"),
-    ("Tanzanian", "+255"),
-    ("Thai", "+66"),
-    ("Togolese", "+228"),
-    ("Tongan", "+676"),
-    ("Trinidadian", "+1-868"),
-    ("Tunisian", "+216"),
-    ("Turkish", "+90"),
-    ("Tuvaluan", "+688"),
-    ("Ugandan", "+256"),
-    ("Ukrainian", "+380"),
-    ("Uruguayan", "+598"),
-    ("Uzbekistani", "+998"),
-    ("Vanuatuan", "+678"),
-    ("Venezuelan", "+58"),
-    ("Vietnamese", "+84"),
-    ("Yemeni", "+967"),
-    ("Zambian", "+260"),
-    ("Zimbabwean", "+263")
-]
-    countries = [country[0] for country in nationality_contry_code]
-
-    #combobox values for days, month, year
-    days = ['01', '02', '03', '04', '05', '06', '07', '08', '09'] + [str(day) for day in range(10, 32)]
-    months = ['01','02','03','04','05','06','07','08','09','10','11','12']
-    years = [str(year) for year in range(current_year - 60, current_year - 17)]
-
     #combobox values for employment types
     employment_types = ['Full Time', 'Part Time', 'Contract', 'Intern']
     branches = ['Branch - 1']
@@ -947,14 +746,14 @@ def new_x_edit_reg(from_window, from_function = None, from_code = None, emp_code
                           values = ['Male ( Mr. )', 'Married Female ( Mrs. )', 'Unmarried Female ( Ms. )'])
 
     age = ttk.Combobox(emp_data_frame, width = 25, values = list(range(18, 61)))
-    nationality = ttk.Combobox(emp_data_frame, width = 25, values = [country[0] for country in nationality_contry_code])
+    nationality = ttk.Combobox(emp_data_frame, width = 25, values = countries)
     phone_no = tk.Entry(emp_data_frame, width = 25)
 
     email = tk.Entry(emp_data_frame, width = 25)
 
     dob_date = ttk.Combobox(emp_data_frame, width = 25, values = days)
     dob_month = ttk.Combobox(emp_data_frame, width = 25, values = months)
-    dob_year = ttk.Combobox(emp_data_frame, width = 25, values = years)
+    dob_year = ttk.Combobox(emp_data_frame, width = 25, values = emp_years)
 
     #list of widgets for frame 1
     widgets = [f_name, l_name, gender, age, nationality, phone_no, email, (dob_date, dob_month, dob_year) ]
@@ -995,7 +794,7 @@ def new_x_edit_reg(from_window, from_function = None, from_code = None, emp_code
     # defining comman widgets for frame 2
     doh_date = ttk.Combobox(job_data_frame, width = 25, values = days)
     doh_month = ttk.Combobox(job_data_frame, width = 25, values = months)
-    doh_year = ttk.Combobox(job_data_frame, width = 25, values = years + [str(year) for year in range(current_year - 17, current_year + 1)])
+    doh_year = ttk.Combobox(job_data_frame, width = 25, values = emp_years + [str(year) for year in range(current_year - 17, current_year + 1)])
 
     #gridding common widgets for frame 2
     doh_date.grid(row = 3, column = 0, padx = 5, pady = 5, sticky = 'news')
@@ -1171,25 +970,303 @@ def new_x_edit_reg(from_window, from_function = None, from_code = None, emp_code
 
     window.mainloop() # looping the screen
 
+#pending
 def new_x_edit_client(from_window, from_function, from_code, client_code = None, edit = False):
     
     #from_window.destroy()
 
     def back_func():
-        pass
+        window.destroy()
+        from_function(from_code)
+
+    def clear_func(data = None):
+        
+        company_name.delete(0, tk.END) ; company_name.insert(0, 'Company Name' if not edit else data[3])
+        location.delete(0, tk.END) ; location.insert(0, 'Location' if not edit else data[4])
+        tele_no.delete(0, tk.END) ; tele_no.insert(0, 'Telephone Number' if not edit else data[5])
+
+        email.delete(0, tk.END) ; email.insert(0, 'Email' if not edit else data[6])
+
+        client_name.delete(0, tk.END) ; client_name.insert(0, 'Client Name' if not edit else data[7])
+        phone_no.delete(0, tk.END) ; phone_no.insert(0, 'Phone Number' if not edit else f'{data[8]} {data[9]}')
+        contract_period.delete(0, tk.END) ; contract_period.insert(0, 'Contract Period ( In Months )' if not edit else data[10])
+
+        from_date.delete(0, tk.END) ; from_date.insert(0, 'Date' if not edit else data[11][2])
+        from_month.delete(0, tk.END) ; from_month.insert(0, 'Month' if not edit else data[11][1])
+        from_year.delete(0, tk.END) ; from_year.insert(0, 'Year' if not edit else data[11][0])
+
+        to_date.delete(0, tk.END) ; to_date.insert(0, 'Date' if not edit else data[12][2])
+        to_month.delete(0, tk.END) ; to_month.insert(0, 'Month' if not edit else data[12][1])
+        to_year.delete(0, tk.END) ; to_year.insert(0, 'Year' if not edit else data[12][0])
+
+        avg_sales.delete(0, tk.END) ; avg_sales.insert(0, 'Average Sales Per Month' if not edit else data[13])
+        total_sales.delete(0, tk.END) ; total_sales.insert(0, 'Sales This Month' if not edit else data[14])
+
+        prod_1.delete(0, tk.END) ; prod_1.insert(0, 'Product 1' if not edit else data[15])
+        prod_2.delete(0, tk.END) ; prod_2.insert(0, 'Product 2' if not edit else data[16] if data[16] is not None else 'Nil')
+        prod_3.delete(0, tk.END) ; prod_3.insert(0, 'Product 3' if not edit else data[17] if data[17] is not None else 'Nil')
+        prod_4.delete(0, tk.END) ; prod_4.insert(0, 'Product 4' if not edit else data[18] if data[18] is not None else 'Nil')
+        prod_5.delete(0, tk.END) ; prod_5.insert(0, 'Product 5' if not edit else data[19] if data[19] is not None else 'Nil')
+
+        tk.messagebox.showinfo(title = 'Successfully Cleared', message = 'Form has been cleared')
 
     def add_func():
-        pass
+        
+        company_name = company_name.get()
+        location = location.get()
 
     window = tk.Tk()
     window.title('Add Client' if not edit else 'Edit Client Data')
 
+    client_frame = tk.LabelFrame(window, text = 'Client Data', relief = 'groove', bd = 5)
+    product_frame = tk.LabelFrame(window, text = 'Product Data', relief = 'groove', bd = 5)
+
+    client_frame.pack(padx = 5, pady = 5, fill = 'both')
+    product_frame.pack(padx = 5, pady = 5, fill = 'both')
+
+    company_name = tk.Entry(client_frame, width = 25)
+    location = ttk.Combobox(client_frame, width = 25, values = countries)
+    tele_no = tk.Entry(client_frame, width = 25)
+
+    email = tk.Entry(client_frame, width = 25)
+
+    client_name = tk.Entry(client_frame, width = 25)
+    phone_no = tk.Entry(client_frame, width = 25)
+    contract_period = ttk.Combobox(client_frame, width = 25, values = list(range(6, 61, 6)))
+
+    from_date = ttk.Combobox(client_frame, width = 25, values = days)
+    from_month = ttk.Combobox(client_frame, width = 25, values = months)
+    from_year = ttk.Combobox(client_frame, width = 25, values = client_years)
+
+    to_date = ttk.Combobox(client_frame, width = 25, values = days)
+    to_month = ttk.Combobox(client_frame, width = 25, values = months)
+    to_year = ttk.Combobox(client_frame, width = 25, values = client_years + list(range(current_year, current_year + 6)))
+
+    avg_sales = tk.Entry(client_frame, width = 25)
+    total_sales = tk.Entry(client_frame, width = 25)
+
+    widgets = [company_name, location, tele_no, email, client_name, phone_no, contract_period,
+               (from_date, from_month, from_year), (to_date, to_month, to_year), avg_sales, total_sales]
+
+    prod_1 = tk.Entry(product_frame, width = 25)
+    prod_2 = tk.Entry(product_frame, width = 25)
+    prod_3 = tk.Entry(product_frame, width = 25)
+    prod_4 = tk.Entry(product_frame, width = 25)
+    prod_5 = tk.Entry(product_frame, width = 25)
+
+    client_Labels = ['Company Name *', 'Location *', 'Telephone Number', 'Email *',
+                     'Client Name *', 'Phone Number', 'Contract Period ( In Months ) *', 
+                     'Contract Valid From *', 'Contract Valid Until *',
+                     'Average Sales Per Month *', 'Sales This Month *']
     
+    row, column = 0, 0
+
+    for label, widget in zip(client_Labels, widgets):
+
+        Label = tk.Label(client_frame, text = label, font = ('Arial', 9, 'bold', 'underline'))
+        Label.grid(row = row, column = column, columnspan = 2, padx = 5, pady = 5, sticky = 's')
+
+        if not isinstance(widget, tuple):
+            widget.grid(row = row+1, column = column, columnspan = 2, padx = 5, pady = 5, sticky = 'news')
+
+        if 'Valid' in label:
+            Label.grid_configure(columnspan = 6)
+            for Widget, i in zip(widget, range(0, 6, 2)):
+                Widget.grid(row = row+1, column = column + i, padx = 5, pady = 5, columnspan = 2, sticky = 'news')
+            column += 4
+        
+        if label == 'Email *':
+            Label.grid_configure(columnspan = 6)
+            widget.grid_configure(columnspan = 6)
+            column += 4
+        
+        if 'Sales' in label:
+            Label.grid_configure(columnspan = 3)
+            widget.grid_configure(columnspan = 3)
+            column += 1
+
+        column = column + 2 if column + 2 < 6 else 0
+        row = row + 2 if column == 0 else row  
+
+    prod_widgets = [prod_1, prod_2, prod_3, prod_4, prod_5] 
+
+    row, column = 0, 0
+
+    for widget, num in zip(prod_widgets, range(1, 6)):
+        
+        Label = tk.Label(product_frame, text = f'Product {num}' if num != 1 else f'Product {num} *', 
+                         font = ('Arial', 9, 'bold', 'underline'))
+        Label.grid(row = row, column = column, padx = 5, pady = 5, sticky = 's')
+
+        widget.grid(row = row+1, column = column, padx = 5, pady = 5, sticky = 'news')
+
+        if num == 5:
+            Label.grid_configure(columnspan = 2)
+            widget.grid_configure(columnspan = 2)
+        
+        column = column + 1 if column + 1 < 2 else 0
+        row = row + 2 if column == 0 else row
+
+    back_button = tk.Button(window, text = 'Back', command = back_func, padx = 10, pady = 10)
+    clear_button = tk.Button(window, text = 'Clear Form', command = clear_func if not edit else lambda : clear_func(data)
+                             , padx = 10, pady = 10)
+    add_button = tk.Button(window, text = 'Add Client' if not edit else 'Edit Data', command = add_func, padx = 10, pady = 10)
+
+    back_button.pack(padx = 5, pady = 5, fill = 'both', expand = True, side = 'left')
+    clear_button.pack(padx = 5, pady = 5, fill = 'both', expand = True, side = 'left')
+    add_button.pack(padx = 5, pady = 5, fill = 'both', expand = True, side = 'right')
+
+    if edit:
+        
+        cursor.execute(f"""SELECT * FROM Client_Database
+                       WHERE Client_Code = {client_code}
+                       AND Employee_Code = {from_code}""")
+        data = list(cursor.fetchone())
+
+        
+        data[11], data[12] = str(data[11]).split('-'), str(data[12]).split('-')
+
+        print(data)
+
+    def on_double_click(event):
+        event.widget.delete(0, tk.END)
+    
+    def get_country_code(event):
+
+        if location.get() in countries:
+            
+            country_code = nationality_contry_code[countries.index(location.get())][1]
+        
+            event.widget.delete(0, tk.END)
+            event.widget.insert(0, country_code + ' ')
+
+    company_name.insert(0, 'Company Name' if not edit else data[3]) ; company_name.bind('<Double-Button-1>', on_double_click)
+    location.insert(0, 'Location' if not edit else data[4]) ; location.bind('<Double-Button-1>', on_double_click)
+    tele_no.insert(0, 'Telephone Number' if not edit else data[5]) ; tele_no.bind('<Double-Button-1>', on_double_click)
+
+    email.insert(0, 'Email' if not edit else data[6]) ; email.bind('<Double-Button-1>', on_double_click)
+
+    client_name.insert(0, 'Client Name' if not edit else data[7]) ; client_name.bind('<Double-Button-1>', on_double_click)
+    phone_no.insert(0, 'Phone Number' if not edit else f'{data[8]} {data[9]}') ; phone_no.bind('<Button-1>', get_country_code)
+    contract_period.insert(0, 'Contract Period ( In Months )' if not edit else data[10]) ; contract_period.bind('<Double-Button-1>', on_double_click)
+
+    from_date.insert(0, 'Date' if not edit else data[11][2]) ; from_date.bind('<Double-Button-1>', on_double_click)
+    from_month.insert(0, 'Month' if not edit else data[11][1]) ; from_month.bind('<Double-Button-1>', on_double_click)
+    from_year.insert(0, 'Year' if not edit else data[11][0]) ; from_year.bind('<Double-Button-1>', on_double_click)
+
+    to_date.insert(0, 'Date' if not edit else data[12][2]) ; to_date.bind('<Double-Button-1>', on_double_click)
+    to_month.insert(0, 'Month' if not edit else data[12][1]) ; to_month.bind('<Double-Button-1>', on_double_click)
+    to_year.insert(0, 'Year' if not edit else data[12][0]) ; to_year.bind('<Double-Button-1>', on_double_click)
+
+    avg_sales.insert(0, 'Average Sales Per Month' if not edit else data[13]) ; avg_sales.bind('<Double-Button-1>', on_double_click)
+    total_sales.insert(0, 'Sales This Month' if not edit else data[14]) ; total_sales.bind('<Double-Button-1>', on_double_click)
+
+    prod_1.insert(0, 'Product 1' if not edit else data[15]) ; prod_1.bind('<Double-Button-1>', on_double_click)
+    prod_2.insert(0, 'Product 2' if not edit else data[16] if data[16] is not None else 'Nil') ; prod_2.bind('<Double-Button-1>', on_double_click)
+    prod_3.insert(0, 'Product 3' if not edit else data[17] if data[17] is not None else 'Nil') ; prod_3.bind('<Double-Button-1>', on_double_click)
+    prod_4.insert(0, 'Product 4' if not edit else data[18] if data[18] is not None else 'Nil') ; prod_4.bind('<Double-Button-1>', on_double_click)
+    prod_5.insert(0, 'Product 5' if not edit else data[19] if data[19] is not None else 'Nil') ; prod_5.bind('<Double-Button-1>', on_double_click)
+
+    client_frame.grid_columnconfigure('all', weight = 1)
+    product_frame.grid_columnconfigure('all', weight = 1)
+
+    dark_theme(window)
+    dark_theme(client_frame)
+    dark_theme(product_frame)
+
+    hover(window)
 
     window.mainloop()
 
-def change_dealership():
-    pass
+def change_dealership(from_window, from_function, from_code, all = False):
+
+    from_window.destroy()
+
+    def back_func():
+        
+        window.destroy()
+        from_function(from_code)
+
+    def next_func():
+        
+        new_name = name.get() if any(name.get()) else None
+        
+        if not all:
+            client_code = int(c_code.get()) if c_code.get().isdigit() else None
+            client_name = c_name.get() if any(c_name.get()) else None
+
+        cursor.execute(f"""SELECT Employee_Code FROM Employee
+                       WHERE First_Name = {new_name.split()[0]}
+                       AND Last_Name = {new_name.split()[1]}""")
+        new_code = cursor.fetchone()
+
+        if None in [new_name, new_code, client_code, client_name]:
+            tk.messagebox.showerror(title = 'Error', message = 'Incorrect Data Entered')
+            return
+        
+        statement = f"""UPDATE Employee
+                       SET Employee_Name = '{new_name}',
+                       Employee_Code = {new_code}
+                       WHERE Client_Code = {client_code} 
+                       AND Client_Name = '{client_name}'""" if not all else f"""
+                       
+                       UPDATE Employee
+                       SET Employee_Name = '{new_name}',
+                       Employee_Code = {new_code} 
+                       WHERE Employee_Code = {from_code}"""
+        
+        cursor.execute(statement)
+        connection.commit()
+
+        window.destroy()
+        tk.messagebox.showinfo(title = 'Success', message = 'Client Successfully Transferred')
+        from_function(from_code)
+        
+    window = tk.Tk()
+    window.title('Change Ownership of Client')
+
+    window.minsize(width = 400, height = 100)
+    
+    timeframe(window)
+
+    frame = tk.Frame(window, relief = 'groove', bd = 5)
+    frame.pack(padx = 5, pady = 5, fill = 'both')
+
+    Labels = ['New Employee Name', 'Client Code', 'Client Name']
+
+    cursor.execute("""SELECT First_Name, Last_Name FROM Employee
+                   WHERE Position = 'Sales Executive'""")
+    names = [f'{name[0]} {name[1]}' for name in cursor.fetchall()]
+
+    name = ttk.Combobox(frame, width = 25, values = names)
+    
+    if not all:
+        c_code = tk.Entry(frame, width = 27)
+        c_name = tk.Entry(frame, width = 27)
+
+    widgets = [name, c_code, c_name] if not all else [name]
+
+    for label, widget, row in zip(Labels, widgets, range(3)):
+
+        Label = tk.Label(frame, text = f'{label} :', font = ('Arial', 9, 'bold'))
+        Label.grid(row = row, column = 0, padx = 5, pady = 8, sticky = 'e')
+
+        widget.grid(row = row, column = 1, padx = 5, pady = 8, sticky = 'w')
+    
+    button_back = tk.Button(window, text = 'Back', command = back_func, padx = 10, pady = 10)
+    button_back.pack(padx = 5, pady = 5, fill = 'both', side = 'left', expand = True)
+
+    button_next = tk.Button(window, text = 'Next', command = next_func, padx = 10, pady = 10)
+    button_next.pack(padx = 5, pady = 5, fill = 'both', side = 'right', expand = True)
+
+    dark_theme(window)
+    dark_theme(frame)
+
+    hover(window)
+
+    frame.grid_columnconfigure('all', weight = 1)
+
+    window.mainloop()
 
 def generated_data(Values):
 
@@ -1501,8 +1578,118 @@ def read_data(emp_code, from_function = None, from_code = None, from_name = None
 
     window.mainloop()
 
-def read_client_data():
-    pass
+def read_client_data(from_window, client_code, from_function, from_code, lower = False):
+    
+    statement = f"""SELECT * FROM Client_Database
+        WHERE Client_Code = {client_code}
+        AND Employee_Code = {from_code}""" if lower else f"""SELECT * FROM Client_Database
+        WHERE Client_Code = {client_code}"""
+    
+    cursor.execute(statement)
+    data = cursor.fetchone()
+
+    emp_labels = ['Employee Code', 'Employee Name']
+    client_labels = ['Client Code', 'Company Name', 'Location',
+                   'Telephone Number', 'Email', 'Client Name', 'Phone Number',
+                   'Contract From', 'Contract To', 'Contract Period',
+                   'Total Sales', 'Average Sales Per Month']
+    
+    if data is None:
+        tk.messagebox.showerror(title = 'Error', message = 'Data Not Found')
+        return
+
+    #from_window.destroy()
+
+    def back_func():
+
+        window.destroy()
+        from_function(from_code)
+
+    window = tk.Tk()
+    window.title('Client Data')
+
+    emp_frame = tk.LabelFrame(window, text = 'Employee Details', relief = 'groove', bd = 5)
+    client_frame = tk.LabelFrame(window, text = 'Client Details', relief = 'groove', bd = 5)
+    product_frame = tk.LabelFrame(window, text = 'Product List', relief = 'groove', bd = 5)
+
+    emp_frame.pack(padx = 5, pady = 5, fill = 'both')
+    client_frame.pack(padx = 5, pady = 5, fill = 'both')
+    product_frame.pack(padx = 5, pady = 5, fill = 'both')
+
+    emp_data = data[0:2]
+    client_data = list(data[2:15])
+    product_data = data[15:]
+
+    client_data[6] = f'{client_data[6]} {client_data[7]}'
+    client_data.pop(7)
+
+    row, column = 0, 0
+
+    for label, datum in zip(emp_labels, emp_data):
+
+        Label = tk.Label(emp_frame, text = f'{label} :', font = ('Arial', 9, 'bold'))
+        Label.grid(row = 0, column = column, padx = 5, pady = 5, sticky = 'e')
+
+        Datum = tk.Label(emp_frame, text = datum)
+        Datum.grid(row = 0, column = column + 1, padx = 5, pady = 5, sticky = 'w')
+
+        if column < 3:
+            sep = tk.Label(emp_frame, text = '|', font = ('Arial', 9, 'bold'))
+            sep.grid(row = 0, column = column + 2, padx = 5, pady = 5, sticky = 'ew')
+        
+        column = column + 3 if column < 6 else 0
+
+    row, column = 0, 0
+
+    for label, datum in zip(client_labels, client_data):
+
+        Label = tk.Label(client_frame, text = f'{label} :', font = ('Arial', 9, 'bold'))
+        Label.grid(row = row, column = column, padx = 5, pady = 5, sticky = 'e')
+
+        Datum = tk.Label(client_frame, text = datum)
+        Datum.grid(row = row, column = column + 1, padx = 5, pady = 5, sticky = 'w')
+
+        if column + 3 < 6:
+            sep = tk.Label(client_frame, text = '|', font = ('Arial', 9, 'bold'))
+            sep.grid(row = row, column = column + 2, padx = 5, pady = 5, sticky = 'ew')
+
+        column = column + 3 if column + 3 < 6 else 0
+        row = row + 1 if column == 0 else row
+
+    row, column = 0, 0
+
+    print(product_data)
+
+    for datum, num in zip(product_data, range(1, 6)):
+
+        Label = tk.Label(product_frame, text = f'Product {num} :', font = ('Arial', 9, 'bold'))
+        Label.grid(row = row, column = column, padx = 5, pady = 5, sticky = 'e')
+
+        Datum = tk.Label(product_frame, text = datum if datum is not None else 'Nil')
+        Datum.grid(row = row, column = column + 1, padx = 5, pady = 5, sticky = 'w')
+
+        if column < 3 and product_data[-1] != datum:
+            sep = tk.Label(product_frame, text = '|', font = ('Arial', 9, 'bold'))
+            sep.grid(row = row, column = column + 2, padx = 5, pady = 5, sticky = 'ew')
+
+        column = column + 3 if column + 3 < 6 else 0
+        row = row + 1 if column == 0 else row
+
+    button_back = tk.Button(window, text = 'Back', command = back_func, padx = 10, pady = 10)
+    button_back.pack(padx = 5, pady = 5, fill = 'both', expand = True)
+
+    dark_theme(window)
+    dark_theme(emp_frame)
+    dark_theme(client_frame)
+    dark_theme(product_frame)
+
+    emp_frame.grid_columnconfigure('all', weight = 1)
+    client_frame.grid_columnconfigure('all', weight = 1)
+    product_frame.grid_columnconfigure('all', weight = 1)
+
+    hover(window)
+
+    window.mainloop()
 
 def get_month(from_window, from_function, from_code, all = False, default_code = None):
 
@@ -1635,13 +1822,14 @@ def read_att_datas(from_window, from_function, from_code, headers, datas, page_c
     from_window.destroy()
 
     def back_func():
-        pass
+        window.destroy()
+        from_function(from_code)
 
     def next_func():
-        pass
+        read_att_datas(window, from_function, from_code, headers, datas, page_count = page_count+1)
 
     def prev_func():
-        pass
+        read_att_datas(window, from_function, from_code, headers, datas, page_count = page_count-1)
 
     window = tk.Tk()
     window.title('Attendance Datas')
@@ -1660,18 +1848,18 @@ def read_att_datas(from_window, from_function, from_code, headers, datas, page_c
         if dark:
                 header_lab.config(bg = '#112', fg = 'white')
 
-    datas = datas[page_count * 20::]
+    _datas = datas[page_count * 20::]
 
     data_count = 0
 
-    while data_count < 20:
+    while data_count < 20 and data_count < len(_datas):
 
-        data = datas[data_count]
+        data = _datas[data_count]
 
         for column in range(len(data)):
 
             data_lab = tk.Label(frame, text = data[column])
-            data_lab.grid(row = data_count + 1, column = column, padx = 5, pady = 5, sticky = 'news') 
+            data_lab.grid(row = data_count + 1, column = column, padx = 2, pady = 3, sticky = 'news') 
 
             if dark:
                 data_lab.config(bg = '#112', fg = 'white')
@@ -1692,10 +1880,11 @@ def read_att_datas(from_window, from_function, from_code, headers, datas, page_c
 
     button_back.pack(padx = 5, pady = 5, side = 'left', fill = 'both', expand = True)
 
-    if (page_count + 1) * 20 < len(datas) + page_count*20:
-        pass
+    if page_count > 0:
+        button_previous.pack(padx = 5, pady = 5, fill = 'both', expand = True, side = 'left')
 
-    
+    if (page_count + 1) * 20 < len(datas) and len(_datas) > 20:
+        button_next.pack(padx = 5, pady = 5, fill = 'both', expand = True, side = 'right')
 
     dark_theme(window)
 
@@ -1771,12 +1960,274 @@ def read_att_data(from_window, to_function, to_code, headers, datas):
 
     window.mainloop()
 
-def read_messages_appeals():
-    pass
-
-def draft_message():
+def read_messages(from_window, from_function, from_code, lower = True): #pending
     
-    pass
+    level = 'Admin' if not lower else 'Employee'
+
+    cursor.execute(f"""SELECT Name, Position, Message_Reason, Message, Message_Number
+                   FROM Messages
+                   WHERE To_Code = {from_code}
+                   AND To_Level = '{level}'""")
+    message_datas = cursor.fetchall()
+
+    if not message_datas:
+        tk.messagebox.showinfo(message = 'No New Messages', title = 'Inbox Empty')
+        return
+    
+    #from_window.destroy()
+
+    terminate = False
+
+    for data in message_datas:
+
+        if terminate:
+            break
+
+        def back_func():
+
+            nonlocal terminate
+
+            terminate = True
+            window.destroy()
+            from_function(from_code)
+
+        def next_func():
+
+            cursor.execute(f"""DELETE FROM Messages
+                           WHERE Message_Number = {data[-1]}""")
+            connection.commit()
+            
+            window.destroy()
+            
+            if message_datas[-1] == data:
+                tk.messagebox.showinfo(message = 'All Messages Have Been Read', title = 'All Messages Read')
+                from_function(from_code)
+            
+            else:
+                pass
+
+        window = tk.Tk()
+        window.title('Message')
+
+        from_frame = tk.LabelFrame(window, text = 'Message From', bd = 5, relief = 'groove')
+        message_frame = tk.LabelFrame(window, text = 'Message', bd = 5, relief = 'groove')
+
+        from_frame.pack(padx = 5, pady = 5, fill = 'both')
+        message_frame.pack(padx = 5, pady = 5, fill = 'both')
+
+        from_labels = ['Admin Name : ','Position : ', 'Message Reason : ', 'Message : ']
+
+        for label, datum, row in zip(from_labels, data, range(4)):
+
+            frame = from_frame if row < 2 else message_frame
+            row = row - 2 if row > 1 else row
+
+            Label = tk.Label(frame, text = label, font = ('Arial', 9, 'bold'))
+            Label.grid(row = row, column = 0, padx = 5, pady = 5, sticky = 'e')
+
+            Data = tk.Label(frame, text = datum)
+            Data.grid(row = row, column = 1, padx = 5, pady = 5, sticky = 'w')
+
+        button_back = tk.Button(window, text = 'Back', command = back_func, padx = 10, pady = 10)
+        button_next = tk.Button(window, text = 'Draft', command = next_func, padx = 10, pady = 10)
+
+        button_back.pack(padx = 5, pady = 5, fill = 'both', expand = True, side = 'left')
+        button_next.pack(padx = 5, pady = 5, fill = 'both', expand = True, side = 'right')
+
+        dark_theme(window)
+        dark_theme(from_frame)
+        dark_theme(message_frame)
+
+        from_frame.grid_columnconfigure('all', weight = 1)
+        message_frame.grid_columnconfigure('all', weight = 1)
+
+        hover(window)
+
+        window.mainloop()
+
+def read_appeals(from_window, from_function, from_code):
+
+    cursor.execute(f"""SELECT Position FROM Administrator
+                   WHERE Administrator_Code = {from_code}""")
+    position = cursor.fetchone()[0]
+
+    cursor.execute(f"""SELECT From_Employe_Code, From_Name, From_Position, Appeal_Reason, Letter, Appeal_Number
+                   FROM Appeals
+                   WHERE To_Position = '{position}'""")
+    
+    appeals = cursor.fetchall()
+
+    if not appeals:
+        tk.messagebox.showinfo(title = 'Inbox Empty', message = 'No New Appeals')
+        return
+    
+    from_window.destroy()
+
+    terminate = False
+
+    for appeal in appeals :
+
+        if terminate:
+            break
+
+        def back_func():
+            pass
+
+        def reject_func():
+            pass
+
+        def accept_func():
+            pass
+
+        def skip_func():
+            pass
+
+        window = tk.Tk()
+        window.title('Appeals')
+
+        from_frame = tk.LabelFrame(window, bd = 5, relief = 'groove', text = 'Appeal From')
+        appeal_frame = tk.LabelFrame(window, bd = 5, relief = 'groove', text = 'Appeal')
+
+        from_frame.pack(padx = 5, pady = 5, fill = 'both')
+        appeal_frame.pack(padx = 5, pady = 5, fill = 'both')
+
+        labels = ['Employee Code', 'Name', 'Position', 'Appeal Reason', 'Appeal']
+
+        for label, data, row in zip(labels, appeal, range(5)):
+
+            frame = from_frame if row < 3 else appeal_frame
+            row = row - 3 if row > 2 else row
+
+            Label = tk.Label(frame, text = f'{label} : ', font = ('Arial', 9, 'bold'))
+            Label.grid(row = row, column = 0, padx = 5, pady = 5, sticky = 'e')
+
+            Data = tk.Label(frame, text = data)
+            Data.grid(row = row, column = 1, padx = 5, pady = 5, sticky = 'w')
+
+        button_back = tk.Button(window, text = 'Back', command = back_func, padx = 10, pady = 10)
+        button_rej = tk.Button(window, text = 'Reject', command = reject_func, padx = 10, pady = 10)
+        button_skip = tk.Button(window, text = 'Skip', command = skip_func, padx = 10, pady = 10)
+        button_acc = tk.Button(window, text = 'Accept', command = accept_func, padx = 10, pady = 10)
+
+        button_back.pack(padx = 5, pady = 5, fill = 'both', expand = True, side = 'left')
+
+        window.mainloop()
+
+def draft_message(from_window, from_function, from_code, dept = False, lower = True, all = False):
+
+    #from_window.destroy()
+
+    def back_func():
+        window.destroy()
+        from_function(from_code)
+
+    def next_func():
+        
+        if dept:
+            _dept = department.get() if (department.get()).strip() else None
+        
+        elif lower and not all:
+            _code = int(code_.get()) if (code_.get()).isdigit() else None
+
+        _reason = reason.get() if (reason.get()).strip() else None
+        _message = message.get('1.0', tk.END)
+
+        datas = [_reason, _message]
+
+        if dept or (not all and lower):
+            datas.insert(0, _dept if dept else _code)
+
+        if any(data is None for data in datas):
+            tk.messagebox.showerror(title = 'Error', message = 'Incorrect Data Entered')
+            return
+        
+        if dept:
+            cursor.execute(f"""SELECT Employee_Code FROM Employee
+                           WHERE Department = '{_dept}'""")    
+            codes = [data[0] for data in cursor.fetchall()]
+        
+        if all and not dept:
+            cursor.execute("SELECT Employee_Code FROM Employee" if lower else f"""
+                           SELECT Administrator_Code FROM Administrator
+                           WHERE Administrator_Code != {from_code}""")
+            codes = [data[0] for data in cursor.fetchall()]
+
+        cursor.execute(f"""SELECT First_Name, Last_Name, Position FROM Administrator
+                       WHERE Administrator_Code = {from_code}""")
+        datas = cursor.fetchone()
+
+        name, position = f'{datas[0]} {datas[1]}', datas[2]
+
+        if lower and not all:
+            cursor.execute(f"""INSERT INTO Messages
+                            VALUES
+                            ({_code}, 'Employee', {from_code}, '{name}', '{position}', '{_reason}', '{_message}')""")
+            connection.commit()
+        
+        elif dept or all:
+            level = 'Admin' if not lower and not dept else 'Employee'
+            for code in codes:
+                cursor.execute(f"""INSERT INTO Messages
+                               VALUES
+                               ({code}, '{level}', {from_code}, '{name}', '{position}', '{_reason}', '{_message}')""")
+                connection.commit()
+
+        tk.messagebox.showinfo(title = 'Success', message = 'Message Sent')
+
+        window.destroy()
+        from_function(from_code)
+
+    window = tk.Tk()
+    window.title('Draft Message')
+
+    timeframe(window)
+
+    frame = tk.Frame(window, relief = 'groove', bd = 5)
+    frame.pack(padx = 5,  pady = 5, fill = 'both')
+
+    labels = ['Message Reason', 'Message']
+
+    reason = tk.Entry(frame, width = 40)
+    message = tk.Text(frame, width = 37, height = 10)
+
+    widgets = [reason, message]
+
+    if dept or (not all and lower):
+
+        labels.insert(0, 'Department' if dept else 'Employee Code')
+
+        if dept:
+
+            cursor.execute(f'SELECT DISTINCT(Department) FROM Employee')
+            depts = [dept[0] for dept in cursor.fetchall()]
+            department = ttk.Combobox(frame, width = 40, values = depts)
+            widgets.insert(0, department)
+        
+        elif lower and not all:
+            code_ = tk.Entry(frame, width = 40)
+            widgets.insert(0, code_)
+    
+    for label, widget, row in zip(labels, widgets, range(len(labels))):
+
+        Label = tk.Label(frame, text = f'{label} :', font = ('Arial', 9, 'bold'))
+        Label.grid(row = row, column = 0, padx  =5, pady = 5, sticky = 'e')
+
+        widget.grid(row = row, column = 1, padx = 5, pady = 5, sticky = 'w')
+
+    button_back = tk.Button(window, text = 'Back', command = back_func, padx = 10, pady = 10)
+    button_next = tk.Button(window, text = 'Draft', command = next_func, padx = 10, pady = 10)
+
+    button_back.pack(padx = 5, pady = 5, fill = 'both', expand = True, side = 'left')
+    button_next.pack(padx = 5, pady = 5, fill = 'both', expand = True, side = 'right')
+
+    frame.grid_columnconfigure('all', weight = 1)
+
+    dark_theme(window)
+    dark_theme(frame)
+
+    hover(window)
+
+    window.mainloop()
 
 def draft_appeals(from_window, emp_code):
 
@@ -1862,7 +2313,7 @@ def sal_position(from_window, ad_emp_code):
         tk.messagebox.showinfo(title = 'No Data Found', message = 'No new registration has been found')
         return
     
-    #from_window.destroy()
+    from_window.destroy()
     
     for data in datas:
 
@@ -2014,7 +2465,17 @@ def new_position_or_salary(_position = False, increment = True):
 
     window.mainloop()
 
-def compose_email():
+def update_pf():
+
+    if datetime.datetime.now().day == 1:
+
+        cursor.execute('''UPDATE Employee
+                       SET Provident_Fund = Provident_Fund + (Salary * 0.1)''')
+        cursor.execute('''UPDATE Administrator
+                       SET Provident_Fund = Provident_Fund + (Salary * 0.15)''')
+        connection.commit()
+
+def compose_email(): #pending
 
     def next_func():
         pass
@@ -2098,6 +2559,68 @@ def compose_email():
     dark_theme(window)
     dark_theme(to_details)
     dark_theme(from_details)
+
+    window.mainloop()
+
+#pending
+def delete(from_window, from_function, from_code, all = False, client = False, Att = False, Emp = True):
+    
+    #connection, cursor
+
+    #from_window.destroy()
+    
+    def back_func():
+        window.destroy()
+        from_function(from_code)
+
+    def next_func():
+        
+        #connection, cursor
+
+        # <var>.get(), to get the input from entry box
+        
+        table = 'Employee' if Emp else 'Client_Database' if client else 'Attendance_Sheet'
+
+        #2 execue statements, one for all and one for oarticular code
+    
+    window = tk.Tk()
+    window.title('Delete Data')
+
+    frame = tk.Frame(window, relief = 'groove', bd = 5)
+    frame.pack(padx = 5, pady = 5, fill = 'both')
+
+    Labels = ['Administrator Code :', 'Name : ']
+
+    ad_code = tk.Entry(frame, width = 25)
+    name = tk.Entry(frame, width = 25)
+
+    widgets = [ad_code, name]
+
+    if (client or Emp) and not all:
+        Labels.append('Client Code : ' if client else 'Employee Code : ')
+
+        code = tk.Entry(frame, width = 25)
+        widgets.append(code)
+
+    for label, widget, row in zip(Labels, widgets, range(len(Labels))):
+
+        Label = tk.Label(frame, text = label, font = ('Arial', 9, 'bold'))
+        Label.grid(row = row, column = 0, padx = 5, pady = 5, sticky = 'e')
+
+        widget.grid(row = row, column = 1, padx = 5, pady = 5, sticky = 'w')
+
+    button_back = tk.Button(window, text = 'Back', command = back_func, padx = 10, pady = 10)
+    button_next = tk.Button(window, text = 'Next', command = next_func, padx = 10, pady = 10)
+
+    button_back.pack(padx = 5, pady = 5, fill = 'both', expand = True, side = 'left')
+    button_next.pack(padx = 5, pady = 5, fill = 'both', expand = True, side = 'right')
+
+    dark_theme(window)
+    dark_theme(frame)
+
+    frame.grid_columnconfigure('all', weight = 1)
+
+    hover(window)
 
     window.mainloop()
 
@@ -2201,3 +2724,5 @@ def attend_poll():
     dark_theme(frame)
 
     window.mainloop()
+
+delete('', '', '', client = True, Emp = False)
