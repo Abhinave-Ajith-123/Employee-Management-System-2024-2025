@@ -414,6 +414,11 @@ def entry_ticket_x_attendance(from_window, lower = True, attendance = False):
     window.mainloop()# looping the window
 
 def Administrator(ad_code): # administrator interface
+
+    def exit():
+
+        window.destroy()
+        homepage()
     
     #creating the window
     window = tk.Tk()
@@ -490,7 +495,7 @@ def Administrator(ad_code): # administrator interface
                  lambda : delete(window, Administrator, ad_code, all = True),
                  lambda : delete(window, Administrator, ad_code, all = True, client = True, Emp = False),
                  lambda : delete(window, Administrator, ad_code, all = True, Att = True, Emp = False),
-                 homepage]
+                 exit]
 
     # row-column variables for griding
     row, column = 0, 0
@@ -516,6 +521,11 @@ def Administrator(ad_code): # administrator interface
     window.mainloop() # looping the main screen
 
 def Employee(emp_code): # employee interface
+
+    def exit():
+
+        window.destroy()
+        homepage()
     
     #creating window
     window = tk.Tk()
@@ -559,7 +569,7 @@ def Employee(emp_code): # employee interface
                  lambda : compose_email(window, Employee, emp_code),
                  lambda : read_messages(window, Employee, emp_code, lower = True),
                  lambda : draft_appeals(window, emp_code),
-                 homepage]
+                 exit]
 
     #row-column variables for gridding
     row, column = 0, 0
@@ -645,7 +655,7 @@ def new_x_edit_reg(from_window, from_function = None, from_code = None, emp_code
         
         first_name = f_name.get().title() if (f_name.get()).strip() and f_name.get() != 'First Name' else None
         last_name = l_name.get().title() if (l_name.get()).strip() and l_name.get() != 'Last Name'  else None
-        _gender = gender.get().title() if (gender.get()).strip() and gender.get() != 'Gender'  else None
+        _gender = (gender.get()[:4].strip()).title() if (gender.get()[:4]).strip() and gender.get() != 'Gender'  else None
 
         _age = int(age.get()) if (age.get()).isdigit() else None
         _nationality = nationality.get().title() if (nationality.get()).strip() and nationality.get() != 'Nationality'  else None
@@ -1085,7 +1095,6 @@ WHERE Employee_Code = {_code}"""
 
     window.mainloop()
 
-#pending
 def new_x_edit_client(from_window, from_function, from_code, client_code = None, edit = False):
     
     from_window.destroy()
@@ -1214,7 +1223,7 @@ def new_x_edit_client(from_window, from_function, from_code, client_code = None,
 
             cursor.execute(f"""SELECT First_Name, Last_Name FROM {table}
                            WHERE {table}_Code = {from_code}""")
-            name = [f'{name[0]} {name[1]}' for name in cursor.fetchone()][0]
+            name = [f'{name[0]} {name[1]}' for name in cursor.fetchall()][0]
 
             tk.messagebox.showinfo(message = f'Data Registered\n Client Code : {client_code}', title = 'Registered')
         
@@ -1574,14 +1583,12 @@ def read_datas(from_window = None, from_function = None, from_code = None, min =
 
     def next_func():
         
-        window.withdraw()
-        read_datas(from_window, from_function, from_code, min = min + 20, 
+        read_datas(window, from_function, from_code, min = min + 20, 
                         lower = lower, client = client, emp_code = emp_code, dept = dept, indices = indices)
 
     def prev_func():
-            
-        window.withdraw()
-        read_datas(from_window, from_function, from_code, min = min - 20, 
+        
+        read_datas(window, from_function, from_code, min = min - 20, 
                    lower = lower, client = client, emp_code = emp_code, dept = dept, indices = indices)
 
     #table definition
@@ -2180,15 +2187,14 @@ def read_att_data(from_window, to_function, to_code, headers, datas):
 
     window.mainloop()
 
-def read_messages(from_window, from_function, from_code, lower = True): #pending
+def read_messages(from_window, from_function, from_code, lower = True): 
     
     level = 'Admin' if not lower else 'Employee'
 
-    cursor.execute(f"""SELECT Name, Position, Message_Reason, Message, Message_Number
+    cursor.execute(f"""SELECT Name, Position, Message_Reason, Message, To_Code, Message_Number
                    FROM Messages
-                   WHERE To_Code = {from_code}
-                   AND To_Level = '{level}'""")
-    message_datas = cursor.fetchall()
+                   WHERE To_Level = '{level}'""")
+    message_datas = [data for data in cursor.fetchall() if from_code in eval(data[-2]) or from_code == eval(data[-2])]
 
     if not message_datas:
         tk.messagebox.showinfo(message = 'No New Messages', title = 'Inbox Empty')
@@ -2214,8 +2220,19 @@ def read_messages(from_window, from_function, from_code, lower = True): #pending
 
         def next_func():
 
-            cursor.execute(f"""DELETE FROM Messages
-                           WHERE Message_Number = {data[-1]}""")
+            data_lst = eval(data[-2])
+
+            data_lst.remove(from_code)
+
+            if data_lst:
+                cursor.execute(f"""UPDATE Messages
+                            SET To_Code = '{data_lst}'
+                            WHERE Message_Number = {data[-1]}""")
+                
+            if not data_lst:
+                cursor.execute(f"""DELETE FROM Messages
+                            WHERE Message_Number = {data[-1]}""")
+                
             connection.commit()
             
             window.destroy()
@@ -2389,7 +2406,7 @@ def draft_message(from_window, from_function, from_code, dept = False, lower = T
     def next_func():
         
         if dept:
-            _dept = department.get() if (department.get()).strip() else None
+            _dept = department.get().title() if (department.get()).strip() else None
         
         elif lower and not all:
             _code = int(code_.get()) if (code_.get()).isdigit() else None
@@ -2424,18 +2441,17 @@ def draft_message(from_window, from_function, from_code, dept = False, lower = T
         name, position = f'{datas[0]} {datas[1]}', datas[2]
 
         if lower and not all:
-            cursor.execute(f"""INSERT INTO Messages
+            cursor.execute(f"""INSERT INTO Messages (To_Code, To_Level, Administrator_Code, Name, Position, Message_Reason, Message)
                             VALUES
-                            ({_code}, 'Employee', {from_code}, '{name}', '{position}', '{_reason}', '{_message}')""")
+                            ('{_code}', 'Employee', {from_code}, '{name}', '{position}', '{_reason}', '{_message}')""")
             connection.commit()
         
         elif dept or all:
             level = 'Admin' if not lower and not dept else 'Employee'
-            for code in codes:
-                cursor.execute(f"""INSERT INTO Messages
-                               VALUES
-                               ({code}, '{level}', {from_code}, '{name}', '{position}', '{_reason}', '{_message}')""")
-                connection.commit()
+            cursor.execute(f"""INSERT INTO Messages (To_Code, To_Level, Administrator_Code, Name, Position, Message_Reason, Message)
+                            VALUES
+                            ('{codes}', '{level}', {from_code}, '{name}', '{position}', '{_reason}', '{_message}')""")
+            connection.commit()
 
         tk.messagebox.showinfo(title = 'Success', message = 'Message Sent')
 
@@ -2509,8 +2525,7 @@ def draft_appeals(from_window, emp_code):
         _Appeal_reason = Appeal_reason.get()
         _letter = letter.get('1.0', tk.END)
         
-        cursor.execute(f"""INSERT INTO Appeals (To_Position, From_Employee_Code, From_Name,
-                       From_Position, Appeal_Reason, Letter)
+        cursor.execute(f"""INSERT INTO Appeals (To_Position, From_Employee_Code, From_Name, From_Position, Appeal_Reason, Letter)
                        VALUES ('{_position}', {from_data[0]}, '{from_data[1]} {from_data[2]}',
                        '{from_data[3]}', '{_Appeal_reason}', '{_letter}')""")
         
@@ -2670,6 +2685,8 @@ def sal_position(from_window, ad_emp_code):
         window.mainloop()
 
 def new_position_or_salary(from_window, from_function, from_code, _position = False, increment = True):
+
+    from_window.destroy()
     
     def next_func():
         
@@ -2763,7 +2780,7 @@ def update_pf():
                        SET Provident_Fund = Provident_Fund + (Salary * 0.15)''')
         connection.commit()
 
-def compose_email(from_window, from_function, from_code): #pending
+def compose_email(from_window, from_function, from_code):
 
     from_window.destroy()
 
@@ -2876,22 +2893,48 @@ def delete(from_window, from_function, from_code, all = False, client = False, A
         if cursor.fetchone() is None:
             tk.messagebox.showerror(message = 'Incorrect data entered', title = 'Error')
             return
-        
-        table = 'Employee' if Emp else 'Client' if client else 'Attendance_Sheet'
 
-        if not all:
+        if Att and all:
 
-            cursor.execute(f"""SELECT * FROM {table}
-                           WHERE {table}_Code = {_code}""")
+            cursor.execute(f'SHOW COLUMNS FROM {table}')
+            headers = [data[0] for data in cursor.fetchall()]
+
+            for header in headers:
+                cursor.execute(f"""ALTER TABLE {table}
+                               DROP COLUMN `{header}`""")
+                
+        elif not all and client and Emp:
+
+            cursor.execute(f"""SELECT * FROM Client
+                           WHERE Client_Code = {_code}""")
             
             if cursor.fetchone() is None:
                 tk.messagebox.showerror(message = 'Entered code does not exist', title = 'Error')
                 return
 
-        statement = f"""DELETE FROM {table} 
-        WHERE {table}_Code = {_code}""" if not all else f"""TRUNCATE {table}"""
-        
-        cursor.execute(statement)
+            cursor.execute(f"""DELETE FROM Client
+                           WHERE Client_Code = {_code}""")
+
+        elif not all and Emp:
+
+            cursor.execute(f"""SELECT * FROM Employee
+                           WHERE Employee_Code = {_code}""")
+            
+            if cursor.fetchone() is None:
+                tk.messagebox.showerror(message = 'Entered code does not exist', title = 'Error')
+                return
+
+            cursor.execute(f"""DELETE FROM Employee
+                           WHERE Employee_Code = {_code}""")
+            
+            cursor.execute(f"""DELETE FROM Attendance_Sheet
+                           WHERE Employee_Code = {_code}""")
+            
+        elif all:
+
+            table = 'Employee' if Emp else 'Client'
+            cursor.execute(f"TRUNCATE {table}")
+
         connection.commit()
 
         window.destroy()
@@ -2906,7 +2949,7 @@ def delete(from_window, from_function, from_code, all = False, client = False, A
     frame = tk.Frame(window, relief = 'groove', bd = 5)
     frame.pack(padx = 5, pady = 5, fill = 'both')
 
-    Labels = ['Administrator Code :', 'Name : ']
+    Labels = ['Employee Code : ' if client and Emp else 'Administrator Code :', 'Name : ']
 
     ad_code = tk.Entry(frame, width = 25)
     name = tk.Entry(frame, width = 25)
