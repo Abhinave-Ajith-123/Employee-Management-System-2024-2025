@@ -13,25 +13,26 @@ def update_time(window, time, date):
     current_date = datetime.datetime.now().strftime('Date : %d - %m - %Y')
     current_time = datetime.datetime.now().strftime('Time : %H : %M : %S')
 
-    time.config(text = current_time)
-    date.config(text = current_date)
+    time.config(text=current_time)
+    date.config(text=current_date)
 
     if window.winfo_exists():
-        update = window.after(1000, lambda : update_time(window, time, date))  
-
-    else:
-        pass  
+        # Store the after() ID to manage it later if needed
+        window.update_id = window.after(1000, lambda: update_time(window, time, date))
+        
+    if not hasattr(window, 'update_id'):
+        window.after_cancel(window.update_id)
 
 def timeframe(window):
 
     datetime_frame = tk.Frame(window)
-    datetime_frame.pack(padx = 5, pady = 1, fill = 'both')
+    datetime_frame.pack(padx=5, pady=1, fill='both')
 
-    time = tk.Label(datetime_frame, font = ('Arial', 10, 'bold'))
-    date = tk.Label(datetime_frame, font = ('Arial', 10, 'bold'))
+    time = tk.Label(datetime_frame, font=('Arial', 10, 'bold'))
+    date = tk.Label(datetime_frame, font=('Arial', 10, 'bold'))
 
-    time.pack(padx = 5, pady = 3, side = 'right')
-    date.pack(padx = 5, pady = 3, side = 'left')
+    time.pack(padx=5, pady=3, side='right')
+    date.pack(padx=5, pady=3, side='left')
 
     update_time(datetime_frame, time, date)
 
@@ -50,36 +51,30 @@ cursor = connection.cursor() # establish cursor
 def on_enter(event): # hover effect 
 
     # dark theme
-
     if dark:
         event.widget.config(bg = '#003', fg = 'white')
     
     # light theme
-
     if not dark:
         event.widget.config(bg = 'light grey', fg = 'black')
 
 def on_leave(event): # hover effect
 
     # dark theme
-    
     if dark:
         event.widget.config(bg = '#112', fg = 'white')
 
-    # light theme
-        
+    # light theme  
     if not dark:
         event.widget.config(bg = 'SystemButtonFace', fg = 'black')
 
 def on_click(event): # hover effect
     
     # dark theme
-
     if dark:
         event.widget.config(bg = 'grey', fg = 'white')
 
-    # light theme
-        
+    # light theme  
     if not dark:
         event.widget.config(bg = 'white', fg = 'black')
 
@@ -263,8 +258,8 @@ def entry_ticket_x_attendance(from_window, lower = True, attendance = False):
 
     def back_func(): # back function
         
-        # destroy the window and goes to homepage
-        window.destroy()
+        # destroy the entry_window and goes to homepage
+        entry_window.destroy()
         homepage()
 
     def enter_func(): # enter function
@@ -313,7 +308,7 @@ def entry_ticket_x_attendance(from_window, lower = True, attendance = False):
             Interface = Administrator if Interface[0] == 'Administrator' else Employee
             
             #running interface
-            window.destroy()
+            entry_window.destroy()
             tk.messagebox.showinfo(title = 'Login Successful', message = 'Login Successful')
 
             Interface(emp_code)
@@ -346,7 +341,7 @@ def entry_ticket_x_attendance(from_window, lower = True, attendance = False):
 
             if status[0] == 'P':
 
-                window.destroy()
+                entry_window.destroy()
                 tk.messagebox.showinfo(title = 'Attendance Marked Already', message = 'Attendance has been already marked for the day')
                 return
 
@@ -357,19 +352,19 @@ def entry_ticket_x_attendance(from_window, lower = True, attendance = False):
             
             connection.commit()
         
-            window.destroy()
+            entry_window.destroy()
             tk.messagebox.showinfo(title = 'Attendance Marked', message = 'Attendance has been marked for the day')
             homepage()
 
-    #creating the window
-    window = tk.Tk()
-    window.title('Data Verification')
-    window.minsize(width = 400, height = 0)
+    #creating the entry_window
+    entry_window = tk.Tk()
+    entry_window.title('Data Verification')
+    entry_window.minsize(width = 400, height = 0)
 
-    timeframe(window)
+    timeframe(entry_window)
 
     #creating the frame
-    frame = tk.LabelFrame(window, relief = 'groove', bd = 5)
+    frame = tk.LabelFrame(entry_window, relief = 'groove', bd = 5)
     frame.pack(padx = 5, pady = 5, fill = 'both')
 
     # widget Labels
@@ -396,38 +391,38 @@ def entry_ticket_x_attendance(from_window, lower = True, attendance = False):
         widget.grid(row = row, column = 1, padx = 5, pady = 5)
     
     #creating buttons( back, enter ) and packing
-    button_back = tk.Button(window, text = 'Back', command = back_func, padx = 10, pady = 10)
+    button_back = tk.Button(entry_window, text = 'Back', command = back_func, padx = 10, pady = 10)
     button_back.pack(padx = 5, pady = 5, side = tk.LEFT, fill = 'x', expand = True)
 
-    button_enter = tk.Button(window, text = 'Enter', command = enter_func, padx = 10, pady = 10)
+    button_enter = tk.Button(entry_window, text = 'Enter', command = enter_func, padx = 10, pady = 10)
     button_enter.pack(padx = 5, pady = 5, side = tk.RIGHT, fill = 'x', expand = True)
 
     #adding hover effect
-    hover(window)
+    hover(entry_window)
 
-    # adjusting to resizing of window
+    # adjusting to resizing of entry_window
     frame.grid_columnconfigure('all', weight = 1)
 
-    dark_theme(window)
+    dark_theme(entry_window)
     dark_theme(frame)
 
-    window.mainloop()# looping the window
+    entry_window.mainloop()# looping the entry_window
 
 def Administrator(ad_code): # administrator interface
 
     def exit():
 
-        window.destroy()
+        admin_window.destroy()
         homepage()
     
-    #creating the window
-    window = tk.Tk()
-    window.title('Employee Interface')
+    #creating the admin_window
+    admin_window = tk.Tk()
+    admin_window.title('Employee Interface')
 
-    timeframe(window)
+    timeframe(admin_window)
 
     #creeating a frame
-    frame = tk.LabelFrame(window, bd = 5, relief = 'groove')
+    frame = tk.LabelFrame(admin_window, bd = 5, relief = 'groove')
     frame.pack(padx = 5, pady = 5, fill = 'both')
 
     #button labels and functions
@@ -464,37 +459,37 @@ def Administrator(ad_code): # administrator interface
               'delete all attendance data', 
               'exit']
     
-    functions = [lambda : read_data(window, ad_code, Administrator, ad_code, lower = False),
-                 lambda : new_x_edit_reg(window, Administrator, ad_code, lower = False, edit = True, emp_code = ad_code),
-                 lambda : new_x_edit_reg(window, Administrator, ad_code, lower = False),
-                 lambda : read_datas(window, Administrator, ad_code, lower = False, indices = list(range(14))),
-                 lambda : read_datas(window, Administrator, ad_code, lower = False, indices = [14, 15, 16]),
-                 lambda : read_datas(window, Administrator, ad_code, lower = True, indices = list(range(15))),
-                 lambda : read_datas(window, Administrator, ad_code, lower = True, indices = [14, 15, 16]),
-                 lambda : get_month(window, Administrator, ad_code, all = True),
-                 lambda : get_code(window, Administrator, ad_code, lower = False),
-                 lambda : get_month(window, Administrator, ad_code),
-                 lambda : sal_position(window, ad_code),
-                 lambda : new_position_or_salary(window, Administrator, ad_code, True),
-                 lambda : new_position_or_salary(window, Administrator, ad_code, True, False),
-                 lambda : new_position_or_salary(window, Administrator, ad_code),
-                 lambda : new_position_or_salary(window, Administrator, increment = False),
-                 lambda : new_x_edit_client(window, Administrator, ad_code),
-                 lambda : read_datas(window, Administrator, ad_code, lower = False, client = True, indices = []),
-                 lambda : get_code(window, Administrator, ad_code, lower = False, client = True, all = True),
-                 lambda : get_code(window, Administrator, ad_code, False, True, False),
-                 lambda : delete(window, Administrator, ad_code, client = True, Emp = False),
-                 lambda : read_appeals(window, Administrator, ad_code),
-                 lambda : read_messages(window, Administrator, ad_code, lower = False),
-                 lambda : draft_message(window, Administrator, ad_code, all = True),
-                 lambda : draft_message(window, Administrator, ad_code),
-                 lambda : draft_message(window, Administrator, ad_code, dept = True, all = True),
-                 lambda : draft_message(window, Administrator, ad_code, lower = False, all = True),
-                 lambda : compose_email(window, Administrator, ad_code),
-                 lambda : delete(window, Administrator, ad_code),
-                 lambda : delete(window, Administrator, ad_code, all = True),
-                 lambda : delete(window, Administrator, ad_code, all = True, client = True, Emp = False),
-                 lambda : delete(window, Administrator, ad_code, all = True, Att = True, Emp = False),
+    functions = [lambda : read_data(admin_window, ad_code, Administrator, ad_code, lower = False),
+                 lambda : new_x_edit_reg(admin_window, Administrator, ad_code, lower = False, edit = True, emp_code = ad_code),
+                 lambda : new_x_edit_reg(admin_window, Administrator, ad_code, lower = False),
+                 lambda : read_datas(admin_window, Administrator, ad_code, lower = False, indices = list(range(14))),
+                 lambda : read_datas(admin_window, Administrator, ad_code, lower = False, indices = [14, 15, 16]),
+                 lambda : read_datas(admin_window, Administrator, ad_code, lower = True, indices = list(range(15))),
+                 lambda : read_datas(admin_window, Administrator, ad_code, lower = True, indices = [14, 15, 16]),
+                 lambda : get_month(admin_window, Administrator, ad_code, all = True),
+                 lambda : get_code(admin_window, Administrator, ad_code, lower = False),
+                 lambda : get_month(admin_window, Administrator, ad_code),
+                 lambda : sal_position(admin_window, ad_code),
+                 lambda : new_position_or_salary(admin_window, Administrator, ad_code, True),
+                 lambda : new_position_or_salary(admin_window, Administrator, ad_code, True, False),
+                 lambda : new_position_or_salary(admin_window, Administrator, ad_code),
+                 lambda : new_position_or_salary(admin_window, Administrator, increment = False),
+                 lambda : new_x_edit_client(admin_window, Administrator, ad_code),
+                 lambda : read_datas(admin_window, Administrator, ad_code, lower = False, client = True, indices = []),
+                 lambda : get_code(admin_window, Administrator, ad_code, lower = False, client = True, all = True),
+                 lambda : get_code(admin_window, Administrator, ad_code, False, True, False),
+                 lambda : delete(admin_window, Administrator, ad_code, client = True, Emp = False),
+                 lambda : read_appeals(admin_window, Administrator, ad_code),
+                 lambda : read_messages(admin_window, Administrator, ad_code, lower = False),
+                 lambda : draft_message(admin_window, Administrator, ad_code, all = True),
+                 lambda : draft_message(admin_window, Administrator, ad_code),
+                 lambda : draft_message(admin_window, Administrator, ad_code, dept = True, all = True),
+                 lambda : draft_message(admin_window, Administrator, ad_code, lower = False, all = True),
+                 lambda : compose_email(admin_window, Administrator, ad_code),
+                 lambda : delete(admin_window, Administrator, ad_code),
+                 lambda : delete(admin_window, Administrator, ad_code, all = True),
+                 lambda : delete(admin_window, Administrator, ad_code, all = True, client = True, Emp = False),
+                 lambda : delete(admin_window, Administrator, ad_code, all = True, Att = True, Emp = False),
                  exit]
 
     # row-column variables for griding
@@ -515,26 +510,26 @@ def Administrator(ad_code): # administrator interface
     
     frame.grid_columnconfigure('all', weight = 1)
 
-    dark_theme(window)
+    dark_theme(admin_window)
     dark_theme(frame)
 
-    window.mainloop() # looping the main screen
+    admin_window.mainloop() # looping the main screen
 
 def Employee(emp_code): # employee interface
 
     def exit():
 
-        window.destroy()
+        emp_window.destroy()
         homepage()
     
-    #creating window
-    window = tk.Tk()
-    window.title('Employee Interface')
+    #creating emp_window
+    emp_window = tk.Tk()
+    emp_window.title('Employee Interface')
 
-    timeframe(window)
+    timeframe(emp_window)
 
     #creating frame
-    frame = tk.LabelFrame(window, bd = 5, relief = 'groove')
+    frame = tk.LabelFrame(emp_window, bd = 5, relief = 'groove')
     frame.pack(padx = 5, pady = 5, fill = 'both')
 
     #button labels
@@ -555,20 +550,20 @@ def Employee(emp_code): # employee interface
               'exit']
     
     #buttone functions
-    functions = [lambda : read_data(window, emp_code, Employee, emp_code),
-                 lambda : new_x_edit_reg(window, Employee, emp_code, emp_code ,edit = True),
-                 lambda : get_month(window, Employee, emp_code, default_code = emp_code),
-                 lambda : read_datas(window, Employee, emp_code, indices = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 14]),
-                 lambda : read_datas(window, Employee, emp_code, lower = False, indices = [1, 2, 3, 4, 5, 6, 7, 8, 9, 12, 13]),
-                 lambda : new_x_edit_client(window, Employee, emp_code),
-                 lambda : get_code(window, Employee, emp_code, lower = True, client = True),
-                 lambda : read_datas(window, Employee, emp_code, client = True, emp_code = emp_code, indices = list(range(20))),
-                 lambda : delete(window, Employee, emp_code, client = True, Emp = False),
-                 lambda : change_dealership(window, Employee, emp_code),
-                 lambda : change_dealership(window, Employee, emp_code, True),
-                 lambda : compose_email(window, Employee, emp_code),
-                 lambda : read_messages(window, Employee, emp_code, lower = True),
-                 lambda : draft_appeals(window, emp_code),
+    functions = [lambda : read_data(emp_window, emp_code, Employee, emp_code),
+                 lambda : new_x_edit_reg(emp_window, Employee, emp_code, emp_code ,edit = True),
+                 lambda : get_month(emp_window, Employee, emp_code, default_code = emp_code),
+                 lambda : read_datas(emp_window, Employee, emp_code, indices = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 14]),
+                 lambda : read_datas(emp_window, Employee, emp_code, lower = False, indices = [1, 2, 3, 4, 5, 6, 7, 8, 9, 12, 13]),
+                 lambda : new_x_edit_client(emp_window, Employee, emp_code),
+                 lambda : get_code(emp_window, Employee, emp_code, lower = True, client = True),
+                 lambda : read_datas(emp_window, Employee, emp_code, client = True, emp_code = emp_code, indices = list(range(20))),
+                 lambda : delete(emp_window, Employee, emp_code, client = True, Emp = False),
+                 lambda : change_dealership(emp_window, Employee, emp_code),
+                 lambda : change_dealership(emp_window, Employee, emp_code, True),
+                 lambda : compose_email(emp_window, Employee, emp_code),
+                 lambda : read_messages(emp_window, Employee, emp_code, lower = True),
+                 lambda : draft_appeals(emp_window, emp_code),
                  exit]
 
     #row-column variables for gridding
@@ -592,10 +587,10 @@ def Employee(emp_code): # employee interface
     #adapting to resizing
     frame.grid_columnconfigure('all', weight = 1)
 
-    dark_theme(window)
+    dark_theme(emp_window)
     dark_theme(frame)
 
-    window.mainloop() #looping the window
+    emp_window.mainloop() #looping the emp_window
 
 # combined function to add new registeration or edit ones registration for both employee and admisistrator
 def new_x_edit_reg(from_window, from_function = None, from_code = None, emp_code = None, lower = True, edit = False):
@@ -604,7 +599,7 @@ def new_x_edit_reg(from_window, from_function = None, from_code = None, emp_code
 
     def back(): # back function
         
-        window.destroy()
+        add_emp_window.destroy()
         
         if from_function is None:
             homepage()
@@ -706,7 +701,6 @@ def new_x_edit_reg(from_window, from_function = None, from_code = None, emp_code
 
         if any(data[1] is None for data in datas):
 
-            print([data for data in datas if data[1] is None])
             tk.messagebox.showerror(title = 'Error', message = 'Invalid Entry')
             return
 
@@ -714,7 +708,7 @@ def new_x_edit_reg(from_window, from_function = None, from_code = None, emp_code
 
         if edit:
 
-            window.destroy()
+            add_emp_window.destroy()
 
             tk.messagebox.showinfo(title = 'Updated', message = 'Data Edited Succesfully')
 
@@ -730,7 +724,7 @@ def new_x_edit_reg(from_window, from_function = None, from_code = None, emp_code
 
         else:
 
-            window.destroy()
+            add_emp_window.destroy()
 
             values = code_passcode_generator(lower)
             
@@ -763,21 +757,21 @@ def new_x_edit_reg(from_window, from_function = None, from_code = None, emp_code
     branches = ['Branch - 1']
     departments = ['Department']
     
-    #creating window
-    window = tk.Tk()
-    window.title('Registration Form' if not edit else 'Edit Registration')
+    #creating add_emp_window
+    add_emp_window = tk.Tk()
+    add_emp_window.title('Registration Form' if not edit else 'Edit Registration')
 
-    timeframe(window)
+    timeframe(add_emp_window)
 
     #creating common frames ( for administrator and employee ) and packing them
-    emp_data_frame = tk.LabelFrame(window, text = 'Employee Details', bd = 5, relief = 'groove')
-    job_data_frame = tk.LabelFrame(window, text = 'Job Details', bd = 5, relief = 'groove')
+    emp_data_frame = tk.LabelFrame(add_emp_window, text = 'Employee Details', bd = 5, relief = 'groove')
+    job_data_frame = tk.LabelFrame(add_emp_window, text = 'Job Details', bd = 5, relief = 'groove')
 
     emp_data_frame.pack(padx = 5, pady = 5, fill = 'both')
     job_data_frame.pack(padx = 5, pady = 5, fill = 'both')
 
     #creating emergency contact data frame and packing them
-    emg_data_frame = tk.LabelFrame(window, text = 'Emergency Contact Details', bd = 5, relief = 'groove')
+    emg_data_frame = tk.LabelFrame(add_emp_window, text = 'Emergency Contact Details', bd = 5, relief = 'groove')
     emg_data_frame.pack(padx = 5, pady = 5, fill = 'both')
 
     # list of labels in frame 3
@@ -915,7 +909,7 @@ def new_x_edit_reg(from_window, from_function = None, from_code = None, emp_code
         column = column + 1 if column + 1 < 2 else 0
         row = row + 1 if label == 'Contact - 1' or label == 'Contact - 2' else row + 2 if column == 0 else row
     
-    #adapting to window resizing
+    #adapting to add_emp_window resizing
     emg_data_frame.grid_columnconfigure('all', weight = 1)
     emp_data_frame.grid_columnconfigure('all', weight = 1)
     job_data_frame.grid_columnconfigure('all', weight = 1)
@@ -946,8 +940,6 @@ def new_x_edit_reg(from_window, from_function = None, from_code = None, emp_code
         for data, index in zip(datas, range(len(datas))):
 
                 #retrieveing data from database
-                print(f"""SELECT {data} FROM {table}
-                               WHERE {table}_Code = {emp_code}""")
                 cursor.execute(f"""SELECT {data} FROM {table}
                                WHERE {table}_Code = {emp_code}""")
                 datas[index] = str(cursor.fetchone()[0]) if 'Date' not in data else str(cursor.fetchone()[0]).split('-')
@@ -1002,9 +994,9 @@ def new_x_edit_reg(from_window, from_function = None, from_code = None, emp_code
         salary.insert(0, 'Salary' if not edit else datas[15]) ; salary.bind('<Double-Button-1>', on_double_click)
 
     #defining buttons
-    Back_button = tk.Button(window, text = 'Back', command = back, padx = 10, pady = 10)
-    Clear_button = tk.Button(window, text = 'Clear Form', command = lambda: clear(datas = datas if edit else None), padx = 10, pady = 10)
-    Next_button = tk.Button(window, text = 'Register' if not edit else 'Update', command = add, padx = 10, pady = 10)
+    Back_button = tk.Button(add_emp_window, text = 'Back', command = back, padx = 10, pady = 10)
+    Clear_button = tk.Button(add_emp_window, text = 'Clear Form', command = lambda: clear(datas = datas if edit else None), padx = 10, pady = 10)
+    Next_button = tk.Button(add_emp_window, text = 'Register' if not edit else 'Update', command = add, padx = 10, pady = 10)
 
     #packing the buttons
     Back_button.pack(padx = 5, pady = 5, fill = 'x', side = 'left', expand = True)
@@ -1012,13 +1004,13 @@ def new_x_edit_reg(from_window, from_function = None, from_code = None, emp_code
     Next_button.pack(padx = 5, pady = 5, fill = 'x', side = 'right', expand = True)
 
     #adding hover effect on the buttons
-    hover(window)
+    hover(add_emp_window)
 
-    dark_theme(window)
-    for frame in window.winfo_children():
+    dark_theme(add_emp_window)
+    for frame in add_emp_window.winfo_children():
         dark_theme(frame)
 
-    window.mainloop() # looping the screen
+    add_emp_window.mainloop() # looping the screen
 
 def get_code(from_window, from_function, from_code, lower = True, client = False, all = False):
 
@@ -1026,7 +1018,7 @@ def get_code(from_window, from_function, from_code, lower = True, client = False
 
     def back():
 
-        window.destroy()
+        get_code_window.destroy()
         from_function(from_code)
 
     def next():
@@ -1048,8 +1040,6 @@ WHERE Client_Code = {_code}""" if client  and not all else f"""
 SELECT Employee_Code FROM Employee
 WHERE Employee_Code = {_code}"""
         
-        print(statement)
-        
         cursor.execute(statement)
         existing = True if cursor.fetchone() else False
 
@@ -1058,20 +1048,20 @@ WHERE Employee_Code = {_code}"""
             return
 
         if client and not all:
-            read_client_data(window, _code, from_function, from_code, lower = False)
+            read_client_data(get_code_window, _code, from_function, from_code, lower = False)
         
         if all and client and not lower:
-            read_datas(window, from_function, from_code, lower = True, client = True, emp_code = _code, indices = list(range(15)))
+            read_datas(get_code_window, from_function, from_code, lower = True, client = True, emp_code = _code, indices = list(range(15)))
         
         if not client:
-            read_data(window, _code, from_function, from_code, lower = True)
+            read_data(get_code_window, _code, from_function, from_code, lower = True)
     
-    window = tk.Tk()
-    window.title('Code')
+    get_code_window = tk.Tk()
+    get_code_window.title('Code')
 
-    timeframe(window)
+    timeframe(get_code_window)
 
-    frame = tk.Frame(window, relief = 'groove', bd = 5, height = 20)
+    frame = tk.Frame(get_code_window, relief = 'groove', bd = 5, height = 20)
     frame.pack(padx = 5, pady = 5, fill = 'both')
 
     code_lab = tk.Label(frame, text = 'Client Code : ' if client and not all else 'Employee Code : ')
@@ -1080,27 +1070,27 @@ WHERE Employee_Code = {_code}"""
     code = tk.Entry(frame, width = 25)
     code.grid(row = 0, column = 1, padx = 5, pady = 5, sticky = 'w')
 
-    button_back = tk.Button(window, text = 'Next', padx = 10, pady = 10, command = back)
+    button_back = tk.Button(get_code_window, text = 'Next', padx = 10, pady = 10, command = back)
     button_back.pack(padx  =5, pady = 5, side = 'left', fill = 'both', expand = True)
     
-    button_next = tk.Button(window, text = 'Next', padx = 10, pady = 10, command = next)
+    button_next = tk.Button(get_code_window, text = 'Next', padx = 10, pady = 10, command = next)
     button_next.pack(padx  =5, pady = 5, side = 'right', fill = 'both', expand = True)
 
     frame.grid_columnconfigure('all', weight = 1)
 
-    hover(window)
+    hover(get_code_window)
 
-    dark_theme(window)
+    dark_theme(get_code_window)
     dark_theme(frame)
 
-    window.mainloop()
+    get_code_window.mainloop()
 
 def new_x_edit_client(from_window, from_function, from_code, client_code = None, edit = False):
     
     from_window.destroy()
 
     def back_func():
-        window.destroy()
+        add_client_window.destroy()
         from_function(from_code)
 
     def clear_func(data = None):
@@ -1186,7 +1176,7 @@ def new_x_edit_client(from_window, from_function, from_code, client_code = None,
             tk.messagebox.showerror(message = 'Incorrect Data Entered', title = 'Error')
             return
         
-        window.destroy()
+        add_client_window.destroy()
 
         if edit:
 
@@ -1237,13 +1227,13 @@ def new_x_edit_client(from_window, from_function, from_code, client_code = None,
             
         from_function(from_code)
 
-    window = tk.Tk()
-    window.title('Add Client' if not edit else 'Edit Client Data')
+    add_client_window = tk.Tk()
+    add_client_window.title('Add Client' if not edit else 'Edit Client Data')
 
-    timeframe(window)
+    timeframe(add_client_window)
 
-    client_frame = tk.LabelFrame(window, text = 'Client Data', relief = 'groove', bd = 5)
-    product_frame = tk.LabelFrame(window, text = 'Product Data', relief = 'groove', bd = 5)
+    client_frame = tk.LabelFrame(add_client_window, text = 'Client Data', relief = 'groove', bd = 5)
+    product_frame = tk.LabelFrame(add_client_window, text = 'Product Data', relief = 'groove', bd = 5)
 
     client_frame.pack(padx = 5, pady = 5, fill = 'both')
     product_frame.pack(padx = 5, pady = 5, fill = 'both')
@@ -1331,10 +1321,10 @@ def new_x_edit_client(from_window, from_function, from_code, client_code = None,
         column = column + 1 if column + 1 < 2 else 0
         row = row + 2 if column == 0 else row
 
-    back_button = tk.Button(window, text = 'Back', command = back_func, padx = 10, pady = 10)
-    clear_button = tk.Button(window, text = 'Clear Form', command = clear_func if not edit else lambda : clear_func(data)
+    back_button = tk.Button(add_client_window, text = 'Back', command = back_func, padx = 10, pady = 10)
+    clear_button = tk.Button(add_client_window, text = 'Clear Form', command = clear_func if not edit else lambda : clear_func(data)
                              , padx = 10, pady = 10)
-    add_button = tk.Button(window, text = 'Add Client' if not edit else 'Edit Data', command = add_func, padx = 10, pady = 10)
+    add_button = tk.Button(add_client_window, text = 'Add Client' if not edit else 'Edit Data', command = add_func, padx = 10, pady = 10)
 
     back_button.pack(padx = 5, pady = 5, fill = 'both', expand = True, side = 'left')
     clear_button.pack(padx = 5, pady = 5, fill = 'both', expand = True, side = 'left')
@@ -1349,8 +1339,6 @@ def new_x_edit_client(from_window, from_function, from_code, client_code = None,
 
         
         data[11], data[12] = str(data[11]).split('-'), str(data[12]).split('-')
-
-        print(data)
 
     def on_double_click(event):
         event.widget.delete(0, tk.END)
@@ -1394,13 +1382,13 @@ def new_x_edit_client(from_window, from_function, from_code, client_code = None,
     client_frame.grid_columnconfigure('all', weight = 1)
     product_frame.grid_columnconfigure('all', weight = 1)
 
-    dark_theme(window)
+    dark_theme(add_client_window)
     dark_theme(client_frame)
     dark_theme(product_frame)
 
-    hover(window)
+    hover(add_client_window)
 
-    window.mainloop()
+    add_client_window.mainloop()
 
 def change_dealership(from_window, from_function, from_code, all = False):
 
@@ -1408,7 +1396,7 @@ def change_dealership(from_window, from_function, from_code, all = False):
 
     def back_func():
         
-        window.destroy()
+        change_window.destroy()
         from_function(from_code)
 
     def next_func():
@@ -1439,23 +1427,21 @@ def change_dealership(from_window, from_function, from_code, all = False):
                        Employee_Code = {new_code} 
                        WHERE Employee_Code = {from_code}"""
         
-        print(statement)
-        
         cursor.execute(statement)
         connection.commit()
 
-        window.destroy()
+        change_window.destroy()
         tk.messagebox.showinfo(title = 'Success', message = 'Client Successfully Transferred')
         from_function(from_code)
         
-    window = tk.Tk()
-    window.title('Change Ownership of Client')
+    change_window = tk.Tk()
+    change_window.title('Change Ownership of Client')
 
-    window.minsize(width = 400, height = 100)
+    change_window.minsize(width = 400, height = 100)
     
-    timeframe(window)
+    timeframe(change_window)
 
-    frame = tk.Frame(window, relief = 'groove', bd = 5)
+    frame = tk.Frame(change_window, relief = 'groove', bd = 5)
     frame.pack(padx = 5, pady = 5, fill = 'both')
 
     Labels = ['New Employee Name', 'Client Code', 'Client Name']
@@ -1480,37 +1466,39 @@ def change_dealership(from_window, from_function, from_code, all = False):
 
         widget.grid(row = row, column = 1, padx = 5, pady = 8, sticky = 'w')
     
-    button_back = tk.Button(window, text = 'Back', command = back_func, padx = 10, pady = 10)
+    button_back = tk.Button(change_window, text = 'Back', command = back_func, padx = 10, pady = 10)
     button_back.pack(padx = 5, pady = 5, fill = 'both', side = 'left', expand = True)
 
-    button_next = tk.Button(window, text = 'Next', command = next_func, padx = 10, pady = 10)
+    button_next = tk.Button(change_window, text = 'Next', command = next_func, padx = 10, pady = 10)
     button_next.pack(padx = 5, pady = 5, fill = 'both', side = 'right', expand = True)
 
-    dark_theme(window)
+    dark_theme(change_window)
     dark_theme(frame)
 
-    hover(window)
+    hover(change_window)
 
     frame.grid_columnconfigure('all', weight = 1)
 
-    window.mainloop()
+    change_window.mainloop()
 
 def generated_data(Values):
 
     def next_func():
         
-        window.destroy()
+        generated_data_window.destroy()
         tk.messagebox.showinfo(title = 'Registered', message = 'Employee Registered')
     
-    window = tk.Tk()
-    window.title('Generated Data')
+    generated_data_window = tk.Tk()
+    generated_data_window.title('Generated Data')
 
-    window.minsize(width = 400, height = 0)
+    timeframe(generated_data_window)
 
-    frame_1 = tk.LabelFrame(window, bd  = 5, relief = 'groove')
+    generated_data_window.minsize(width = 400, height = 0)
+
+    frame_1 = tk.LabelFrame(generated_data_window, bd  = 5, relief = 'groove')
     frame_1.pack(padx = 5, pady = 5, fill = 'both')
 
-    frame_2 = tk.LabelFrame(window, bd  = 5, relief = 'groove')
+    frame_2 = tk.LabelFrame(generated_data_window, bd  = 5, relief = 'groove')
     frame_2.pack(padx = 5, pady = 5, fill = 'both')
 
     Labels = ['Employee Code', 'Attendance Passcode', 'Login Password']
@@ -1531,19 +1519,19 @@ def generated_data(Values):
         if text == 'Note':
             Text.configure(font = ('Arial', 9, 'underline', 'bold'))
 
-    button_next = tk.Button(window, text = 'Next', command = next_func, padx = 10, pady = 10)
+    button_next = tk.Button(generated_data_window, text = 'Next', command = next_func, padx = 10, pady = 10)
     button_next.pack(padx = 5, pady = 5, fill = 'both', expand = True)
 
-    hover(window)
+    hover(generated_data_window)
 
     frame_1.grid_columnconfigure('all', weight = 1)
     frame_2.grid_columnconfigure('all', weight = 1)
 
-    dark_theme(window)
+    dark_theme(generated_data_window)
     dark_theme(frame_1)
     dark_theme(frame_2)
 
-    window.mainloop()
+    generated_data_window.mainloop()
 
 def code_passcode_generator(lower = True):
     
@@ -1575,20 +1563,20 @@ def read_datas(from_window = None, from_function = None, from_code = None, min =
     def back_func():
         
         if from_function not in (Administrator, Employee):
-            read_data(window, emp_code, from_function, from_code, lower = True)
+            read_data(read_datas_window, emp_code, from_function, from_code, lower = True)
 
         else:
-            window.destroy()
+            read_datas_window.destroy()
             from_function(from_code)
 
     def next_func():
         
-        read_datas(window, from_function, from_code, min = min + 20, 
+        read_datas(read_datas_window, from_function, from_code, min = min + 20, 
                         lower = lower, client = client, emp_code = emp_code, dept = dept, indices = indices)
 
     def prev_func():
         
-        read_datas(window, from_function, from_code, min = min - 20, 
+        read_datas(read_datas_window, from_function, from_code, min = min - 20, 
                    lower = lower, client = client, emp_code = emp_code, dept = dept, indices = indices)
 
     #table definition
@@ -1601,8 +1589,6 @@ def read_datas(from_window = None, from_function = None, from_code = None, min =
     # MySQL statement for retrieving data
     statement = f"""SELECT * FROM {table} WHERE Employee_Code = {emp_code}""" if emp_code is not None else f"""
     SELECT * FROM {table} WHERE Department = '{dept}'""" if dept is not None else f"""SELECT * FROM {table}"""
-
-    print(statement)
 
     # Datas
     cursor.execute(statement)
@@ -1617,13 +1603,13 @@ def read_datas(from_window = None, from_function = None, from_code = None, min =
     from_window.destroy()
     
     # Screen Definition
-    window = tk.Tk()
-    window.title('Data')
+    read_datas_window = tk.Tk()
+    read_datas_window.title('Data')
 
-    timeframe(window)
+    timeframe(read_datas_window)
 
     #frame definition
-    frame = tk.Frame(window, bd = 5, relief = 'groove')
+    frame = tk.Frame(read_datas_window, bd = 5, relief = 'groove')
     frame.pack(padx = 5, pady = 5, fill = 'both')
 
     # gridding the header row and divider between data and header as per given indices
@@ -1644,11 +1630,11 @@ def read_datas(from_window = None, from_function = None, from_code = None, min =
 
         data_count += 1
 
-    button_back = tk.Button(window, text = 'Employee Data' if from_function not in (Administrator, Employee) else 'Exit', 
+    button_back = tk.Button(read_datas_window, text = 'Employee Data' if from_function not in (Administrator, Employee) else 'Exit', 
                             command = back_func, padx = 10, pady = 10)
     
-    button_next = tk.Button(window, text = 'Next Page',  command = next_func, padx = 10, pady = 10)
-    button_previous = tk.Button(window, text = 'Previous Page',  command = prev_func, padx = 10, pady = 10)
+    button_next = tk.Button(read_datas_window, text = 'Next Page',  command = next_func, padx = 10, pady = 10)
+    button_previous = tk.Button(read_datas_window, text = 'Previous Page',  command = prev_func, padx = 10, pady = 10)
 
     button_back.pack(padx = 5, pady = 5, side = 'left', fill = 'both', expand = True)
 
@@ -1660,25 +1646,25 @@ def read_datas(from_window = None, from_function = None, from_code = None, min =
 
     if from_function == read_data and min + 20 > min + len(datas):
 
-        button_exit = tk.Button(window, text = 'Exit', command = back_func, padx = 10, pady = 10)
+        button_exit = tk.Button(read_datas_window, text = 'Exit', command = back_func, padx = 10, pady = 10)
         button_exit.pack(padx = 5, pady = 5, side = 'right', fill = 'both', expand = True)
 
     frame.grid_columnconfigure('all', weight = 1)
 
-    dark_theme(window)
+    dark_theme(read_datas_window)
     dark_theme(frame)
 
-    window.mainloop()
+    read_datas_window.mainloop()
 
 def read_data(from_window, emp_code, from_function = None, from_code = None, lower = True):
 
     def back_func():
         
-        window.destroy()
+        read_data_window.destroy()
         from_function(from_code)
     
     def next_func():
-        read_datas(from_window = window, from_function = from_function, from_code = from_code, client = True, emp_code = emp_code)
+        read_datas(from_window = read_data_window, from_function = from_function, from_code = from_code, client = True, emp_code = emp_code)
 
     from_window.destroy()
     
@@ -1692,8 +1678,6 @@ def read_data(from_window, emp_code, from_function = None, from_code = None, low
 
     for data, index in zip(datas, range(len(datas))):
 
-        print(f'SELECT `{data}` FROM {table} WHERE {table}_Code = {emp_code}')
-
         cursor.execute(f'SELECT `{data}` FROM {table} WHERE {table}_Code = {emp_code}')
         _data = cursor.fetchone()
         
@@ -1704,14 +1688,14 @@ def read_data(from_window, emp_code, from_function = None, from_code = None, low
             tk.messagebox.showerror(title = 'Error', message = 'Data Not Found')
             back_func()
 
-    window = tk.Tk()
-    window.title('Data')
+    read_data_window = tk.Tk()
+    read_data_window.title('Data')
 
-    timeframe(window)
+    timeframe(read_data_window)
 
-    emp_data_frame = tk.LabelFrame(window, bd = 5, relief = 'groove', text = 'Employee Data')
-    job_data_frame = tk.LabelFrame(window, bd = 5, relief = 'groove', text = 'Job Details')
-    emg_data_frame = tk.LabelFrame(window, bd = 5, relief = 'groove', text = 'Emergency Contact Details')
+    emp_data_frame = tk.LabelFrame(read_data_window, bd = 5, relief = 'groove', text = 'Employee Data')
+    job_data_frame = tk.LabelFrame(read_data_window, bd = 5, relief = 'groove', text = 'Job Details')
+    emg_data_frame = tk.LabelFrame(read_data_window, bd = 5, relief = 'groove', text = 'Emergency Contact Details')
 
     emp_data_frame.pack(padx = 5, pady = 5, fill = 'both')
     job_data_frame.pack(padx = 5, pady = 5, fill = 'both')
@@ -1788,24 +1772,24 @@ def read_data(from_window, emp_code, from_function = None, from_code = None, low
             row = row + 1 if column == 0 else row
 
 
-    button_back = tk.Button(window, text = 'Back', command = back_func, padx = 10, pady = 10)
+    button_back = tk.Button(read_data_window, text = 'Back', command = back_func, padx = 10, pady = 10)
     button_back.pack(padx = 5, pady = 5, side = 'left', fill = 'both', expand = True)
 
     if lower:
-        button_next = tk.Button(window, text = 'Client Details', command = next_func, padx = 10, pady = 10)
+        button_next = tk.Button(read_data_window, text = 'Client Details', command = next_func, padx = 10, pady = 10)
         button_next.pack(padx = 5, pady = 5, side = 'right', fill = 'both', expand = True)
 
     emp_data_frame.grid_columnconfigure('all', weight = 1)
     job_data_frame.grid_columnconfigure('all', weight = 1)
     emg_data_frame.grid_columnconfigure('all', weight = 1)
 
-    dark_theme(window)
+    dark_theme(read_data_window)
     dark_theme(emp_data_frame)
     dark_theme(job_data_frame)
     dark_theme(emg_data_frame)
     
 
-    window.mainloop()
+    read_data_window.mainloop()
 
 def read_client_data(from_window, client_code, from_function, from_code, lower = False):
     
@@ -1831,15 +1815,15 @@ def read_client_data(from_window, client_code, from_function, from_code, lower =
 
     def back_func():
 
-        window.destroy()
+        read_client_data_window.destroy()
         from_function(from_code)
 
-    window = tk.Tk()
-    window.title('Client Data')
+    read_client_data_window = tk.Tk()
+    read_client_data_window.title('Client Data')
 
-    emp_frame = tk.LabelFrame(window, text = 'Employee Details', relief = 'groove', bd = 5)
-    client_frame = tk.LabelFrame(window, text = 'Client Details', relief = 'groove', bd = 5)
-    product_frame = tk.LabelFrame(window, text = 'Product List', relief = 'groove', bd = 5)
+    emp_frame = tk.LabelFrame(read_client_data_window, text = 'Employee Details', relief = 'groove', bd = 5)
+    client_frame = tk.LabelFrame(read_client_data_window, text = 'Client Details', relief = 'groove', bd = 5)
+    product_frame = tk.LabelFrame(read_client_data_window, text = 'Product List', relief = 'groove', bd = 5)
 
     emp_frame.pack(padx = 5, pady = 5, fill = 'both')
     client_frame.pack(padx = 5, pady = 5, fill = 'both')
@@ -1902,10 +1886,10 @@ def read_client_data(from_window, client_code, from_function, from_code, lower =
         column = column + 3 if column + 3 < 6 else 0
         row = row + 1 if column == 0 else row
 
-    button_back = tk.Button(window, text = 'Back', command = back_func, padx = 10, pady = 10)
+    button_back = tk.Button(read_client_data_window, text = 'Back', command = back_func, padx = 10, pady = 10)
     button_back.pack(padx = 5, pady = 5, fill = 'both', expand = True)
 
-    dark_theme(window)
+    dark_theme(read_client_data_window)
     dark_theme(emp_frame)
     dark_theme(client_frame)
     dark_theme(product_frame)
@@ -1914,9 +1898,9 @@ def read_client_data(from_window, client_code, from_function, from_code, lower =
     client_frame.grid_columnconfigure('all', weight = 1)
     product_frame.grid_columnconfigure('all', weight = 1)
 
-    hover(window)
+    hover(read_client_data_window)
 
-    window.mainloop()
+    read_client_data_window.mainloop()
 
 def get_month(from_window, from_function, from_code, all = False, default_code = None):
 
@@ -1924,7 +1908,7 @@ def get_month(from_window, from_function, from_code, all = False, default_code =
 
     def back_func():
         
-        window.destroy()
+        get_month_window.destroy()
         from_function(from_code)
 
     def next_func():
@@ -1979,7 +1963,7 @@ def get_month(from_window, from_function, from_code, all = False, default_code =
 
                 datas[index] = data
 
-            read_att_datas(window, from_function, from_code, headers, datas)
+            read_att_datas(get_month_window, from_function, from_code, headers, datas)
         
         else:
             
@@ -1991,14 +1975,14 @@ def get_month(from_window, from_function, from_code, all = False, default_code =
                 tk.messagebox.showerror(title = 'Error', message = 'Data with corresponding Employee Code\nwas not found')
                 return
 
-            read_att_data(window, from_function, from_code, headers, datas)
+            read_att_data(get_month_window, from_function, from_code, headers, datas)
     
-    window = tk.Tk()
-    window.title('Attendance Data')
+    get_month_window = tk.Tk()
+    get_month_window.title('Attendance Data')
 
-    timeframe(window)
+    timeframe(get_month_window)
 
-    frame = tk.Frame(window, relief = 'groove', bd = 5)
+    frame = tk.Frame(get_month_window, relief = 'groove', bd = 5)
     frame.pack(padx = 5, pady = 5, fill = 'both')
 
     if not all and from_function != Employee:
@@ -2029,39 +2013,39 @@ def get_month(from_window, from_function, from_code, all = False, default_code =
         column = column + 1 if column + 1 < 2 else 0
         row = row + 2 if column == 0 else row
 
-    back_button = tk.Button(window, text = 'Back', command = back_func, padx = 10, pady = 10)
-    next_button = tk.Button(window, text = 'Proceed', command = next_func, padx = 10, pady = 10)
+    back_button = tk.Button(get_month_window, text = 'Back', command = back_func, padx = 10, pady = 10)
+    next_button = tk.Button(get_month_window, text = 'Proceed', command = next_func, padx = 10, pady = 10)
 
     back_button.pack(padx = 5, pady = 5, side = 'left', fill = 'both', expand = True)
     next_button.pack(padx = 5, pady = 5, side = 'right', fill = 'both', expand = True)
 
-    hover(window)
+    hover(get_month_window)
 
     frame.grid_columnconfigure('all', weight = 1)
 
-    dark_theme(window)
+    dark_theme(get_month_window)
     dark_theme(frame)
 
-    window.mainloop()
+    get_month_window.mainloop()
 
 def read_att_datas(from_window, from_function, from_code, headers, datas, page_count = 0):
 
     from_window.destroy()
 
     def back_func():
-        window.destroy()
+        read_att_datas_window.destroy()
         from_function(from_code)
 
     def next_func():
-        read_att_datas(window, from_function, from_code, headers, datas, page_count = page_count+1)
+        read_att_datas(read_att_datas_window, from_function, from_code, headers, datas, page_count = page_count+1)
 
     def prev_func():
-        read_att_datas(window, from_function, from_code, headers, datas, page_count = page_count-1)
+        read_att_datas(read_att_datas_window, from_function, from_code, headers, datas, page_count = page_count-1)
 
-    window = tk.Tk()
-    window.title('Attendance Datas')
+    read_att_datas_window = tk.Tk()
+    read_att_datas_window.title('Attendance Datas')
 
-    frame = tk.Frame(window, bd = 5, relief = 'groove')
+    frame = tk.Frame(read_att_datas_window, bd = 5, relief = 'groove')
     frame.pack(padx = 5, pady = 5, fill = 'both')
 
     dark_theme(frame)
@@ -2100,10 +2084,10 @@ def read_att_datas(from_window, from_function, from_code, headers, datas, page_c
 
     frame.grid_columnconfigure('all', weight = 1) 
 
-    button_back = tk.Button(window, text = 'Exit', command = back_func, padx = 10, pady = 10)
+    button_back = tk.Button(read_att_datas_window, text = 'Exit', command = back_func, padx = 10, pady = 10)
     
-    button_next = tk.Button(window, text = 'Next Page',  command = next_func, padx = 10, pady = 10)
-    button_previous = tk.Button(window, text = 'Previous Page',  command = prev_func, padx = 10, pady = 10)
+    button_next = tk.Button(read_att_datas_window, text = 'Next Page',  command = next_func, padx = 10, pady = 10)
+    button_previous = tk.Button(read_att_datas_window, text = 'Previous Page',  command = prev_func, padx = 10, pady = 10)
 
     button_back.pack(padx = 5, pady = 5, side = 'left', fill = 'both', expand = True)
 
@@ -2113,9 +2097,9 @@ def read_att_datas(from_window, from_function, from_code, headers, datas, page_c
     if (page_count + 1) * 20 < len(datas) and len(_datas) > 20:
         button_next.pack(padx = 5, pady = 5, fill = 'both', expand = True, side = 'right')
 
-    dark_theme(window)
+    dark_theme(read_att_datas_window)
 
-    window.mainloop()
+    read_att_datas_window.mainloop()
 
 def read_att_data(from_window, to_function, to_code, headers, datas):
 
@@ -2123,19 +2107,19 @@ def read_att_data(from_window, to_function, to_code, headers, datas):
     
     def back_func():
 
-        window.destroy()
+        read_att_data_window.destroy()
         to_function(to_code)
     
-    window = tk.Tk()
-    window.title('Attendance Data')
+    read_att_data_window = tk.Tk()
+    read_att_data_window.title('Attendance Data')
 
-    timeframe(window)
+    timeframe(read_att_data_window)
 
     cursor.execute(f'''SELECT First_Name, Last_Name FROM Employee
                    WHERE Employee_Code = {datas[0]}''')
     name = ' '.join(list(cursor.fetchone()))
 
-    emp_frame = tk.LabelFrame(window, text = 'Employee Details', bd = 5, relief = 'groove')
+    emp_frame = tk.LabelFrame(read_att_data_window, text = 'Employee Details', bd = 5, relief = 'groove')
     emp_frame.pack(padx = 5, pady = 5, fill = 'both')
     
     emp_details = ['Employee Code : ', datas[0], '|', 'Name : ', name]
@@ -2149,7 +2133,7 @@ def read_att_data(from_window, to_function, to_code, headers, datas):
             label.config(font = ('Arial', 9, 'bold'))
             label.grid_configure(sticky = 'e' if data != '|' else 'ew')
 
-    att_frame = tk.LabelFrame(window, text = 'Attendance Data', relief = 'groove', bd = 5)
+    att_frame = tk.LabelFrame(read_att_data_window, text = 'Attendance Data', relief = 'groove', bd = 5)
     att_frame.pack(padx = 5, pady = 5, fill = 'both')
 
     row, column = 0, 0
@@ -2173,19 +2157,19 @@ def read_att_data(from_window, to_function, to_code, headers, datas):
         row = row + 1 if row + 1 < 10 else 0
         column = column + 3 if row == 0 else column
 
-    back_button = tk.Button(window, text = 'Back', command = back_func, padx = 10, pady = 10)
+    back_button = tk.Button(read_att_data_window, text = 'Back', command = back_func, padx = 10, pady = 10)
     back_button.pack(padx = 5, pady = 5, fill = 'both', expand = True)
 
     emp_frame.grid_columnconfigure('all', weight = 1)
     att_frame.grid_columnconfigure('all', weight = 1)
 
-    hover(window)
+    hover(read_att_data_window)
 
-    dark_theme(window)
+    dark_theme(read_att_data_window)
     dark_theme(emp_frame)
     dark_theme(att_frame)
 
-    window.mainloop()
+    read_att_data_window.mainloop()
 
 def read_messages(from_window, from_function, from_code, lower = True): 
     
@@ -2216,7 +2200,7 @@ def read_messages(from_window, from_function, from_code, lower = True):
             nonlocal terminate
 
             terminate = True
-            window.destroy()
+            read_message_window.destroy()
 
         def next_func():
 
@@ -2235,7 +2219,7 @@ def read_messages(from_window, from_function, from_code, lower = True):
                 
             connection.commit()
             
-            window.destroy()
+            read_message_window.destroy()
             
             if message_datas[-1] == data:
                 tk.messagebox.showinfo(message = 'All Messages Have Been Read', title = 'All Messages Read')
@@ -2244,13 +2228,13 @@ def read_messages(from_window, from_function, from_code, lower = True):
             else:
                 pass
 
-        window = tk.Tk()
-        window.title('Message')
+        read_message_window = tk.Tk()
+        read_message_window.title('Message')
 
-        timeframe(window)
+        timeframe(read_message_window)
 
-        from_frame = tk.LabelFrame(window, text = 'Message From', bd = 5, relief = 'groove')
-        message_frame = tk.LabelFrame(window, text = 'Message', bd = 5, relief = 'groove')
+        from_frame = tk.LabelFrame(read_message_window, text = 'Message From', bd = 5, relief = 'groove')
+        message_frame = tk.LabelFrame(read_message_window, text = 'Message', bd = 5, relief = 'groove')
 
         from_frame.pack(padx = 5, pady = 5, fill = 'both')
         message_frame.pack(padx = 5, pady = 5, fill = 'both')
@@ -2268,22 +2252,22 @@ def read_messages(from_window, from_function, from_code, lower = True):
             Data = tk.Label(frame, text = datum)
             Data.grid(row = row, column = 1, padx = 5, pady = 5, sticky = 'w')
 
-        button_back = tk.Button(window, text = 'Back', command = back_func, padx = 10, pady = 10)
-        button_next = tk.Button(window, text = 'Draft', command = next_func, padx = 10, pady = 10)
+        button_back = tk.Button(read_message_window, text = 'Back', command = back_func, padx = 10, pady = 10)
+        button_next = tk.Button(read_message_window, text = 'Draft', command = next_func, padx = 10, pady = 10)
 
         button_back.pack(padx = 5, pady = 5, fill = 'both', expand = True, side = 'left')
         button_next.pack(padx = 5, pady = 5, fill = 'both', expand = True, side = 'right')
 
-        dark_theme(window)
+        dark_theme(read_message_window)
         dark_theme(from_frame)
         dark_theme(message_frame)
 
         from_frame.grid_columnconfigure('all', weight = 1)
         message_frame.grid_columnconfigure('all', weight = 1)
 
-        hover(window)
+        hover(read_message_window)
 
-        window.mainloop()
+        read_message_window.mainloop()
 
 def read_appeals(from_window, from_function, from_code):
 
@@ -2317,7 +2301,7 @@ def read_appeals(from_window, from_function, from_code):
              nonlocal terminate
 
              terminate = True
-             window.destroy()
+             read_appeal_window.destroy()
 
         def rej_acc_func(accept = True):
 
@@ -2336,26 +2320,26 @@ def read_appeals(from_window, from_function, from_code):
             
             connection.commit()
 
-            window.destroy()
+            read_appeal_window.destroy()
 
             if appeal == appeals[-1]:
                 tk.messagebox.showinfo(message = 'All Appeals have been marked', title = 'Inbox Cleared')
                 from_function(from_code)            
 
         def skip_func():
-            window.destroy()
+            read_appeal_window.destroy()
 
             if appeal == appeals[-1]:
                 tk.messagebox.showinfo(message = 'All Appeals have been marked', title = 'Inbox Cleared')
                 from_function(from_code)
 
-        window = tk.Tk()
-        window.title('Appeals')
+        read_appeal_window = tk.Tk()
+        read_appeal_window.title('Appeals')
 
-        timeframe(window)
+        timeframe(read_appeal_window)
 
-        from_frame = tk.LabelFrame(window, bd = 5, relief = 'groove', text = 'Appeal From')
-        appeal_frame = tk.LabelFrame(window, bd = 5, relief = 'groove', text = 'Appeal')
+        from_frame = tk.LabelFrame(read_appeal_window, bd = 5, relief = 'groove', text = 'Appeal From')
+        appeal_frame = tk.LabelFrame(read_appeal_window, bd = 5, relief = 'groove', text = 'Appeal')
 
         from_frame.pack(padx = 5, pady = 5, fill = 'both')
         appeal_frame.pack(padx = 5, pady = 5, fill = 'both')
@@ -2373,17 +2357,17 @@ def read_appeals(from_window, from_function, from_code):
             Data = tk.Label(frame, text = data)
             Data.grid(row = row, column = 1, padx = 5, pady = 5, sticky = 'w')
 
-        button_back = tk.Button(window, text = 'Back', command = back_func, padx = 10, pady = 10)
-        button_rej = tk.Button(window, text = 'Reject', command = lambda : rej_acc_func(False), padx = 10, pady = 10)
-        button_skip = tk.Button(window, text = 'Skip', command = skip_func, padx = 10, pady = 10)
-        button_acc = tk.Button(window, text = 'Accept', command = rej_acc_func, padx = 10, pady = 10)
+        button_back = tk.Button(read_appeal_window, text = 'Back', command = back_func, padx = 10, pady = 10)
+        button_rej = tk.Button(read_appeal_window, text = 'Reject', command = lambda : rej_acc_func(False), padx = 10, pady = 10)
+        button_skip = tk.Button(read_appeal_window, text = 'Skip', command = skip_func, padx = 10, pady = 10)
+        button_acc = tk.Button(read_appeal_window, text = 'Accept', command = rej_acc_func, padx = 10, pady = 10)
 
         button_back.pack(padx = 5, pady = 5, fill = 'both', expand = True, side = 'left')
         button_rej.pack(padx = 5, pady = 5, fill = 'both', expand = True, side = 'left')
         button_acc.pack(padx = 5, pady = 5, fill = 'both', expand = True, side = 'right')
         button_skip.pack(padx = 5, pady = 5, fill = 'both', expand = True, side = 'right')
 
-        dark_theme(window)
+        dark_theme(read_appeal_window)
         dark_theme(from_frame)
 
         dark_theme(appeal_frame)
@@ -2391,16 +2375,16 @@ def read_appeals(from_window, from_function, from_code):
         from_frame.grid_columnconfigure('all', weight = 1)
         appeal_frame.grid_columnconfigure('all', weight = 1)
 
-        hover(window)
+        hover(read_appeal_window)
 
-        window.mainloop()
+        read_appeal_window.mainloop()
 
 def draft_message(from_window, from_function, from_code, dept = False, lower = True, all = False):
 
     from_window.destroy()
 
     def back_func():
-        window.destroy()
+        draft_message_window.destroy()
         from_function(from_code)
 
     def next_func():
@@ -2455,15 +2439,15 @@ def draft_message(from_window, from_function, from_code, dept = False, lower = T
 
         tk.messagebox.showinfo(title = 'Success', message = 'Message Sent')
 
-        window.destroy()
+        draft_message_window.destroy()
         from_function(from_code)
 
-    window = tk.Tk()
-    window.title('Draft Message')
+    draft_message_window = tk.Tk()
+    draft_message_window.title('Draft Message')
 
-    timeframe(window)
+    timeframe(draft_message_window)
 
-    frame = tk.Frame(window, relief = 'groove', bd = 5)
+    frame = tk.Frame(draft_message_window, relief = 'groove', bd = 5)
     frame.pack(padx = 5,  pady = 5, fill = 'both')
 
     labels = ['Message Reason', 'Message']
@@ -2495,20 +2479,20 @@ def draft_message(from_window, from_function, from_code, dept = False, lower = T
 
         widget.grid(row = row, column = 1, padx = 5, pady = 5, sticky = 'w')
 
-    button_back = tk.Button(window, text = 'Back', command = back_func, padx = 10, pady = 10)
-    button_next = tk.Button(window, text = 'Draft', command = next_func, padx = 10, pady = 10)
+    button_back = tk.Button(draft_message_window, text = 'Back', command = back_func, padx = 10, pady = 10)
+    button_next = tk.Button(draft_message_window, text = 'Draft', command = next_func, padx = 10, pady = 10)
 
     button_back.pack(padx = 5, pady = 5, fill = 'both', expand = True, side = 'left')
     button_next.pack(padx = 5, pady = 5, fill = 'both', expand = True, side = 'right')
 
     frame.grid_columnconfigure('all', weight = 1)
 
-    dark_theme(window)
+    dark_theme(draft_message_window)
     dark_theme(frame)
 
-    hover(window)
+    hover(draft_message_window)
 
-    window.mainloop()
+    draft_message_window.mainloop()
 
 def draft_appeals(from_window, emp_code):
 
@@ -2516,7 +2500,7 @@ def draft_appeals(from_window, emp_code):
     
     def back_func():
         
-        window.destroy()
+        draft_appeal_window.destroy()
         Employee(emp_code)
 
     def next_func():
@@ -2545,12 +2529,12 @@ def draft_appeals(from_window, emp_code):
     
     from_data = cursor.fetchone()
     
-    window = tk.Tk()
-    window.title('Draft Appeals')
+    draft_appeal_window = tk.Tk()
+    draft_appeal_window.title('Draft Appeals')
 
-    timeframe(window)
+    timeframe(draft_appeal_window)
 
-    frame = tk.Frame(window, bd = 5, relief = 'groove')
+    frame = tk.Frame(draft_appeal_window, bd = 5, relief = 'groove')
     frame.pack(padx = 5, pady = 5, fill = 'both')
 
     position = ttk.Combobox(frame, width = 50, values = positions)
@@ -2566,20 +2550,20 @@ def draft_appeals(from_window, emp_code):
 
         label[1].grid(row = row, column = 1, padx = 5, pady = 5, sticky = 'w')
 
-    button_back = tk.Button(window, text = 'Back', command = back_func, padx = 20, pady = 20)
-    button_next = tk.Button(window, text = 'Compose', command = next_func, padx = 20, pady = 20)
+    button_back = tk.Button(draft_appeal_window, text = 'Back', command = back_func, padx = 20, pady = 20)
+    button_next = tk.Button(draft_appeal_window, text = 'Compose', command = next_func, padx = 20, pady = 20)
 
     button_back.pack(padx = 5, pady = 5, side = 'left', fill = 'both', expand = True)
     button_next.pack(padx = 5, pady = 5, side = 'right', fill = 'both', expand = True)
 
     frame.grid_columnconfigure('all', weight = 1)
 
-    hover(window)
+    hover(draft_appeal_window)
 
-    dark_theme(window)
+    dark_theme(draft_appeal_window)
     dark_theme(frame)
 
-    window.mainloop()
+    draft_appeal_window.mainloop()
 
 def sal_position(from_window, ad_emp_code):
 
@@ -2613,28 +2597,28 @@ def sal_position(from_window, ad_emp_code):
             connection.commit()
             
             if data != datas[-1]:
-                window.destroy()
+                new_sal_pos_window.destroy()
                 return
 
             else:
-                window.destroy()
+                new_sal_pos_window.destroy()
                 tk.messagebox.showinfo(title = 'All Done', message = 'All Data Has Been Added')
                 Administrator(ad_emp_code)
                 return
 
         def back_func():
-            window.destroy()
+            new_sal_pos_window.destroy()
             Administrator(ad_emp_code)
             return
 
-        window = tk.Tk()
-        window.title('Manage Salary and Position')
+        new_sal_pos_window = tk.Tk()
+        new_sal_pos_window.title('Manage Salary and Position')
 
-        timeframe(window)
+        timeframe(new_sal_pos_window)
         
-        window.minsize(width = 400, height = 100)
+        new_sal_pos_window.minsize(width = 400, height = 100)
 
-        details = tk.LabelFrame(window, relief = 'groove', bd = 5, text = 'Existing Basic Details')
+        details = tk.LabelFrame(new_sal_pos_window, relief = 'groove', bd = 5, text = 'Existing Basic Details')
         details.pack(padx = 5, pady = 5, fill = 'both')
 
         Labels = 'Employee Code :', 'Name :'
@@ -2648,7 +2632,7 @@ def sal_position(from_window, ad_emp_code):
             value = tk.Label(details, text = Value)
             value.grid(row = row, column = 1, padx = 5, pady = 5, sticky = 'w')
 
-        new_data = tk.LabelFrame(window, relief = 'groove', bd = 5, text = 'New Data')
+        new_data = tk.LabelFrame(new_sal_pos_window, relief = 'groove', bd = 5, text = 'New Data')
         new_data.pack(padx = 5, pady = 5, fill = 'both')
 
         Position = tk.Entry(new_data, width = 30)
@@ -2667,22 +2651,22 @@ def sal_position(from_window, ad_emp_code):
         details.grid_columnconfigure('all', weight = 1)
         new_data.grid_columnconfigure('all', weight = 1)
 
-        next_button = tk.Button(window, text = 'Next', command = next_func, padx = 10, pady = 10)
+        next_button = tk.Button(new_sal_pos_window, text = 'Next', command = next_func, padx = 10, pady = 10)
         next_button.pack(padx = 5, pady = 5, fill = 'both', expand = True, side = 'right')
 
-        back_button = tk.Button(window, text = 'Back', command = back_func, padx = 10, pady = 10)
+        back_button = tk.Button(new_sal_pos_window, text = 'Back', command = back_func, padx = 10, pady = 10)
         back_button.pack(padx = 5, pady = 5, fill = 'both', expand = True, side = 'left')
 
-        hover(window)
+        hover(new_sal_pos_window)
 
         details.grid_columnconfigure('all', weight = 1)
         new_data.grid_columnconfigure('all', weight = 1)
 
-        dark_theme(window)
+        dark_theme(new_sal_pos_window)
         dark_theme(details)
         dark_theme(new_data)
 
-        window.mainloop()
+        new_sal_pos_window.mainloop()
 
 def new_position_or_salary(from_window, from_function, from_code, _position = False, increment = True):
 
@@ -2696,7 +2680,6 @@ def new_position_or_salary(from_window, from_function, from_code, _position = Fa
         _sal = int(salary.get()) if salary.get().isdigit() else None
 
         datas = [_code, _sal, position_] if _position else [_code, _sal]
-        print(salary.get())
 
         if any(data is None for data in datas):
             tk.messagebox.showerror(message = 'Incorrect data entered')
@@ -2718,21 +2701,21 @@ def new_position_or_salary(from_window, from_function, from_code, _position = Fa
 
         tk.messagebox.showinfo(message = 'Data Updated Succesfully', title = 'Completed')
         
-        window.destroy()
+        update_sal_pos_window.destroy()
         from_function(from_code)
 
     def back_func():
-        window.destroy()
+        update_sal_pos_window.destroy()
         from_function(from_code)
 
     title = 'Promotion' if _position and increment else 'Demotion' if _position and not increment else 'Incrementation' if not _position and increment else 'Decrementation'
 
-    window = tk.Tk()
-    window.title(title)
+    update_sal_pos_window = tk.Tk()
+    update_sal_pos_window.title(title)
 
-    timeframe(window)
+    timeframe(update_sal_pos_window)
 
-    frame = tk.Frame(window, bd = 5, relief = 'groove', height = 50)
+    frame = tk.Frame(update_sal_pos_window, bd = 5, relief = 'groove', height = 50)
     frame.pack(padx = 5, pady = 5, fill = 'both')
 
     sal_lab = 'New Salary : ' if _position else 'Increment [ in % ] : ' if increment else 'Decrement [ in % ]'
@@ -2757,18 +2740,18 @@ def new_position_or_salary(from_window, from_function, from_code, _position = Fa
 
     frame.grid_columnconfigure('all', weight = 1)
 
-    button_back = tk.Button(window, text = 'Back', command = back_func, padx = 10, pady = 10)
-    button_next = tk.Button(window, text = 'Update', command = next_func, padx = 10, pady = 10)
+    button_back = tk.Button(update_sal_pos_window, text = 'Back', command = back_func, padx = 10, pady = 10)
+    button_next = tk.Button(update_sal_pos_window, text = 'Update', command = next_func, padx = 10, pady = 10)
 
     button_back.pack(padx = 5, pady = 5, side = 'left', fill = 'both', expand = True)
     button_next.pack(padx = 5, pady = 5, side = 'right', fill = 'both', expand = True)
 
-    hover(window)
+    hover(update_sal_pos_window)
 
-    dark_theme(window)
+    dark_theme(update_sal_pos_window)
     dark_theme(frame)
 
-    window.mainloop()
+    update_sal_pos_window.mainloop()
 
 def update_pf():
 
@@ -2788,25 +2771,25 @@ def compose_email(from_window, from_function, from_code):
         pass
 
     def back_func():
-        window.destroy()
+        email_window.destroy()
         from_function(from_code)
 
     def attachment():
         pass
     
-    window = tk.Tk()
-    window.title('Compose Email')
+    email_window = tk.Tk()
+    email_window.title('Compose Email')
 
     # real time date and time packing
     
-    timeframe(window)
+    timeframe(email_window)
 
     # function code
 
-    from_details = tk.Frame(window, bd = 5, relief = 'groove')
+    from_details = tk.Frame(email_window, bd = 5, relief = 'groove')
     from_details.pack(padx = 5, pady = 5, fill = 'both')
 
-    to_details = tk.Frame(window, bd = 5, relief = 'groove')
+    to_details = tk.Frame(email_window, bd = 5, relief = 'groove')
     to_details.pack(padx = 5, pady = 5, fill = 'both')
 
     label = ['From', 'Password']
@@ -2847,30 +2830,30 @@ def compose_email(from_window, from_function, from_code):
     attach = tk.Button(to_details, compound = 'left', text = 'Add Attachments', command = attachment, padx = 10, pady = 10)
     attach.grid(row = 5, column = 0, columnspan = 2, padx = 5, pady = 5, sticky = 'news')
 
-    next_button = tk.Button(window, text = 'Next', command = next_func, padx = 10, pady = 10)
+    next_button = tk.Button(email_window, text = 'Next', command = next_func, padx = 10, pady = 10)
     next_button.pack(padx = 5, pady = 5, fill = 'both', expand = True, side = 'right')
 
-    back_button = tk.Button(window, text = 'Back', command = back_func, padx = 10, pady = 10)
+    back_button = tk.Button(email_window, text = 'Back', command = back_func, padx = 10, pady = 10)
     back_button.pack(padx = 5, pady = 5, fill = 'both', expand = True, side = 'left')
 
     from_details.grid_columnconfigure('all', weight = 1)
     to_details.grid_columnconfigure('all', weight = 1)
 
     hover(to_details)
-    hover(window)
+    hover(email_window)
 
-    dark_theme(window)
+    dark_theme(email_window)
     dark_theme(to_details)
     dark_theme(from_details)
 
-    window.mainloop()
+    email_window.mainloop()
 
 def delete(from_window, from_function, from_code, all = False, client = False, Att = False, Emp = True):
 
     from_window.destroy()
     
     def back_func():
-        window.destroy()
+        delete_window.destroy()
         from_function(from_code)
 
     def next_func():
@@ -2937,16 +2920,18 @@ def delete(from_window, from_function, from_code, all = False, client = False, A
 
         connection.commit()
 
-        window.destroy()
+        delete_window.destroy()
 
         tk.messagebox.showinfo(message = 'Data Cleared', title = 'Successful')
 
         from_function(from_code)
     
-    window = tk.Tk()
-    window.title('Delete Data')
+    delete_window = tk.Tk()
+    delete_window.title('Delete Data')
 
-    frame = tk.Frame(window, relief = 'groove', bd = 5)
+    timeframe(delete_window)
+
+    frame = tk.Frame(delete_window, relief = 'groove', bd = 5)
     frame.pack(padx = 5, pady = 5, fill = 'both')
 
     Labels = ['Employee Code : ' if client and Emp else 'Administrator Code :', 'Name : ']
@@ -2969,19 +2954,19 @@ def delete(from_window, from_function, from_code, all = False, client = False, A
 
         widget.grid(row = row, column = 1, padx = 5, pady = 5, sticky = 'w')
 
-    button_back = tk.Button(window, text = 'Back', command = back_func, padx = 10, pady = 10)
-    button_next = tk.Button(window, text = 'Next', command = next_func, padx = 10, pady = 10)
+    button_back = tk.Button(delete_window, text = 'Back', command = back_func, padx = 10, pady = 10)
+    button_next = tk.Button(delete_window, text = 'Next', command = next_func, padx = 10, pady = 10)
 
     button_back.pack(padx = 5, pady = 5, fill = 'both', expand = True, side = 'left')
     button_next.pack(padx = 5, pady = 5, fill = 'both', expand = True, side = 'right')
 
-    dark_theme(window)
+    dark_theme(delete_window)
     dark_theme(frame)
 
     frame.grid_columnconfigure('all', weight = 1)
 
-    hover(window)
+    hover(delete_window)
 
-    window.mainloop()
+    delete_window.mainloop()
 
 title_page()
