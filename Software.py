@@ -4,27 +4,26 @@ from hashlib import sha3_256 as hash
 from tkinter import messagebox, ttk
 import random
 import smtplib
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
 from Variables import *
 
 dark = True # flag for dark theme
-stop = False
 
 def update_time(window, time, date):
 
-    if not stop:
+    current_date = datetime.datetime.now().strftime('Date : %d - %m - %Y')
+    current_time = datetime.datetime.now().strftime('Time : %H : %M : %S')
 
-        current_date = datetime.datetime.now().strftime('Date : %d - %m - %Y')
-        current_time = datetime.datetime.now().strftime('Time : %H : %M : %S')
+    time.config(text=current_time)
+    date.config(text=current_date)
 
-        time.config(text=current_time)
-        date.config(text=current_date)
-
-        if window.winfo_exists():
-            # Store the after() ID to manage it later if needed
-            window.update_id = window.after(1000, lambda: update_time(window, time, date))
-            
-        if not hasattr(window, 'update_id'):
-            window.after_cancel(window.update_id)
+    if window.winfo_exists():
+        # Store the after() ID to manage it later if needed
+        window.update_id = window.after(1000, lambda: update_time(window, time, date))
+        
+    if not hasattr(window, 'update_id'):
+        window.after_cancel(window.update_id)
 
 def timeframe(window):
 
@@ -257,18 +256,12 @@ def homepage(): # home screen to the app
 # combined function to mark attendance and to get data for interface access
 def entry_ticket_x_attendance(from_window, lower = True, attendance = False): 
 
-    global stop
-
-    stop = False
-    print(stop)
 
     from_window.destroy()
 
     def back_func(): # back function
         
         # destroy the entry_window and goes to homepage
-        stop = True
-        print(stop)
         entry_window.destroy()
         homepage()
 
@@ -452,6 +445,7 @@ def Administrator(ad_code): # administrator interface
               'provide incrementation to an employee', 
               'provide decrementation to an employee',
               'add client data',
+              'edit client data',
               'retrieve all client data', 
               'retrieve all data of clients\nunder an employee', 
               'retrieve a client data',
@@ -485,6 +479,7 @@ def Administrator(ad_code): # administrator interface
                  lambda : new_position_or_salary(admin_window, Administrator, ad_code),
                  lambda : new_position_or_salary(admin_window, Administrator, ad_code,increment = False),
                  lambda : new_x_edit_client(admin_window, Administrator, ad_code),
+                 lambda : get_code(admin_window, Administrator, ad_code, client = True, edit = True),
                  lambda : read_datas(admin_window, Administrator, ad_code, lower = False, client = True, indices = [1,2,3]),
                  lambda : get_code(admin_window, Administrator, ad_code, lower = False, client = True, all = True),
                  lambda : get_code(admin_window, Administrator, ad_code, False, True, False),
@@ -510,6 +505,10 @@ def Administrator(ad_code): # administrator interface
         #creating button widget and gridding them
         button = tk.Button(frame, text = label.title(), command = function, padx = 20, pady = 20)
         button.grid(row = row, column = column, padx = 5, pady = 5, sticky = 'news')
+
+        if label == 'exit':
+            button.grid_configure(columnspan = 4)
+            column += 3
 
         #incrementing the row-column variables
         column = column + 1 if column + 1 < 4 else 0
@@ -549,6 +548,7 @@ def Employee(emp_code): # employee interface
               "retrieve all employee data",
               "retrieve all administrator data", 
               'add client data', 
+              'edit client data',
               'retrieve cliet data', 
               'retrieve all client data', 
               'delete client data', 
@@ -565,6 +565,7 @@ def Employee(emp_code): # employee interface
                  lambda : get_month(emp_window, Employee, emp_code, default_code = emp_code),
                  lambda : read_datas(emp_window, Employee, emp_code, indices = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 14]),
                  lambda : read_datas(emp_window, Employee, emp_code, lower = False, indices = [1, 2, 3, 4, 5, 6, 7, 8, 9, 12, 13]),
+                 lambda : get_code(emp_window, Employee, emp_code, client = True, edit = True),
                  lambda : new_x_edit_client(emp_window, Employee, emp_code),
                  lambda : get_code(emp_window, Employee, emp_code, lower = True, client = True),
                  lambda : read_datas(emp_window, Employee, emp_code, client = True, emp_code = emp_code, indices = list(range(20))),
@@ -584,6 +585,10 @@ def Employee(emp_code): # employee interface
         #creating button widgets and gridding them
         button = tk.Button(frame, text = label.title(), command = function, padx = 20, pady = 20)
         button.grid(row = row, column = column, padx = 5, pady = 5, sticky = 'news')
+
+        if label == 'exit':
+            button.grid_configure(columnspan = 3)
+            column += 2
 
         #adding hover effects
         button.bind('<Enter>', on_enter)
@@ -1022,7 +1027,7 @@ def new_x_edit_reg(from_window, from_function = None, from_code = None, emp_code
 
     add_emp_window.mainloop() # looping the screen
 
-def get_code(from_window, from_function, from_code, lower = True, client = False, all = False):
+def get_code(from_window, from_function, from_code, lower = True, client = False, all = False, edit = False):
 
     from_window.destroy()
 
@@ -1057,11 +1062,14 @@ WHERE Employee_Code = {_code}"""
             tk.messagebox.showerror(message = 'Entered code does not exist', title = 'Error')
             return
 
-        if client and not all:
+        if client and not all and not edit:
             read_client_data(get_code_window, _code, from_function, from_code, lower = False)
         
-        if all and client and not lower:
+        if all and client and not lower and not edit:
             read_datas(get_code_window, from_function, from_code, lower = True, client = True, emp_code = _code, indices = list(range(15)))
+
+        if client and edit:
+            new_x_edit_client(get_code_window, from_function, from_code, _code, edit = True)
         
         if not client:
             read_data(get_code_window, _code, from_function, from_code, lower = True)
@@ -1080,7 +1088,7 @@ WHERE Employee_Code = {_code}"""
     code = tk.Entry(frame, width = 25)
     code.grid(row = 0, column = 1, padx = 5, pady = 5, sticky = 'w')
 
-    button_back = tk.Button(get_code_window, text = 'Next', padx = 10, pady = 10, command = back)
+    button_back = tk.Button(get_code_window, text = 'Back', padx = 10, pady = 10, command = back)
     button_back.pack(padx  =5, pady = 5, side = 'left', fill = 'both', expand = True)
     
     button_next = tk.Button(get_code_window, text = 'Next', padx = 10, pady = 10, command = next)
@@ -2781,24 +2789,83 @@ def compose_email(from_window, from_function, from_code):
     from_window.destroy()
 
     def next_func():
-        pass
+
+        from_ = _from.get() if '@' in _from.get() and '.com' in _from.get() else None
+        password = passwd.get().strip() if passwd.get().strip() else None
+
+        #kukpvadgjwfsmgdb
+
+        To = to.get() if '@' in to.get() and '.com' in to.get() else None
+        Cc = cc.get().split(', ') if cc.get().strip() else []
+        Bcc = bcc.get().split(', ') if bcc.get().strip() else []
+
+        Sub = sub.get().strip() if sub.get().strip() else None
+        Con = con.get('1.0', tk.END).strip() if con.get('1.0', tk.END).strip() else None
+
+        any(print(data) for data in [from_, password, To, Sub, Con])
+
+        if any(data is None for data in [from_, password, To, Sub, Con]):
+            tk.messagebox.showerror(message='Incorrect data entered', title='Error')
+            return
+
+        message = MIMEMultipart()
+        message["From"] = from_
+        message["To"] = To
+        message["Subject"] = Sub
+
+        if Cc:
+            message["Cc"] = ", ".join(Cc)
+
+        message.attach(MIMEText(Con, "plain"))
+
+        # Combine all recipients into one list
+        recipients = [To] + Cc + Bcc
+
+        # Start SMTP server
+        server = smtplib.SMTP('smtp.gmail.com', 587)
+        server.starttls()
+
+        try:
+            server.login(from_, password)  # Use 'from_' instead of 'To' for login
+
+        except smtplib.SMTPAuthenticationError:
+            tk.messagebox.showerror(message='Your Email Id or Password is Invalid', title='Error')
+            server.quit()
+            return
+        
+        except Exception as e:
+            tk.messagebox.showerror(message=f'An error occurred: {e}', title='Error')
+            server.quit()
+            return
+
+        try:
+            server.sendmail(from_, To, message.as_string())
+
+        except smtplib.SMTPRecipientsRefused:
+            tk.messagebox.showerror(message='Recipient email ID is invalid', title='Error')
+
+        except Exception as e:
+            tk.messagebox.showerror(message=f'An error occurred: {e}', title='Error')
+
+        else:
+            tk.messagebox.showinfo(message='Mail Successfully Sent', title='Success')
+
+        finally:
+            server.quit()
+            email_window.destroy()
+            from_function(from_window)
 
     def back_func():
         email_window.destroy()
         from_function(from_code)
-
-    def attachment():
-        pass
     
     email_window = tk.Tk()
     email_window.title('Compose Email')
 
     # real time date and time packing
-    
     timeframe(email_window)
 
     # function code
-
     from_details = tk.Frame(email_window, bd = 5, relief = 'groove')
     from_details.pack(padx = 5, pady = 5, fill = 'both')
 
@@ -2840,9 +2907,6 @@ def compose_email(from_window, from_function, from_code):
     con = tk.Text(to_details, width = 50, height = 10)
     con.grid(row = 4, column = 1, padx = 5, pady = 5, sticky = 'ew')
 
-    attach = tk.Button(to_details, compound = 'left', text = 'Add Attachments', command = attachment, padx = 10, pady = 10)
-    attach.grid(row = 5, column = 0, columnspan = 2, padx = 5, pady = 5, sticky = 'news')
-
     next_button = tk.Button(email_window, text = 'Next', command = next_func, padx = 10, pady = 10)
     next_button.pack(padx = 5, pady = 5, fill = 'both', expand = True, side = 'right')
 
@@ -2852,7 +2916,6 @@ def compose_email(from_window, from_function, from_code):
     from_details.grid_columnconfigure('all', weight = 1)
     to_details.grid_columnconfigure('all', weight = 1)
 
-    hover(to_details)
     hover(email_window)
 
     dark_theme(email_window)
