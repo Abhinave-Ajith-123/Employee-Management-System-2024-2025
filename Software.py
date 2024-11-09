@@ -7,21 +7,24 @@ import smtplib
 from Variables import *
 
 dark = True # flag for dark theme
+stop = False
 
 def update_time(window, time, date):
 
-    current_date = datetime.datetime.now().strftime('Date : %d - %m - %Y')
-    current_time = datetime.datetime.now().strftime('Time : %H : %M : %S')
+    if not stop:
 
-    time.config(text=current_time)
-    date.config(text=current_date)
+        current_date = datetime.datetime.now().strftime('Date : %d - %m - %Y')
+        current_time = datetime.datetime.now().strftime('Time : %H : %M : %S')
 
-    if window.winfo_exists():
-        # Store the after() ID to manage it later if needed
-        window.update_id = window.after(1000, lambda: update_time(window, time, date))
-        
-    if not hasattr(window, 'update_id'):
-        window.after_cancel(window.update_id)
+        time.config(text=current_time)
+        date.config(text=current_date)
+
+        if window.winfo_exists():
+            # Store the after() ID to manage it later if needed
+            window.update_id = window.after(1000, lambda: update_time(window, time, date))
+            
+        if not hasattr(window, 'update_id'):
+            window.after_cancel(window.update_id)
 
 def timeframe(window):
 
@@ -254,11 +257,18 @@ def homepage(): # home screen to the app
 # combined function to mark attendance and to get data for interface access
 def entry_ticket_x_attendance(from_window, lower = True, attendance = False): 
 
+    global stop
+
+    stop = False
+    print(stop)
+
     from_window.destroy()
 
     def back_func(): # back function
         
         # destroy the entry_window and goes to homepage
+        stop = True
+        print(stop)
         entry_window.destroy()
         homepage()
 
@@ -473,9 +483,9 @@ def Administrator(ad_code): # administrator interface
                  lambda : new_position_or_salary(admin_window, Administrator, ad_code, True),
                  lambda : new_position_or_salary(admin_window, Administrator, ad_code, True, False),
                  lambda : new_position_or_salary(admin_window, Administrator, ad_code),
-                 lambda : new_position_or_salary(admin_window, Administrator, increment = False),
+                 lambda : new_position_or_salary(admin_window, Administrator, ad_code,increment = False),
                  lambda : new_x_edit_client(admin_window, Administrator, ad_code),
-                 lambda : read_datas(admin_window, Administrator, ad_code, lower = False, client = True, indices = []),
+                 lambda : read_datas(admin_window, Administrator, ad_code, lower = False, client = True, indices = [1,2,3]),
                  lambda : get_code(admin_window, Administrator, ad_code, lower = False, client = True, all = True),
                  lambda : get_code(admin_window, Administrator, ad_code, False, True, False),
                  lambda : delete(admin_window, Administrator, ad_code, client = True, Emp = False),
@@ -1547,7 +1557,7 @@ def code_passcode_generator(lower = True):
                    WHERE Employee_Code = {code} OR Attendance_Passcode = '{passcode}'""")
     
     if not lower:
-        cursor.execute(f"""SELECT Employee_Code FROM Administrator
+        cursor.execute(f"""SELECT Administrator_Code FROM Administrator
                        WHERE Administrator_Code = {code}""")
         
     existing = True if cursor.fetchone() is not None else False
@@ -1600,7 +1610,7 @@ def read_datas(from_window = None, from_function = None, from_code = None, min =
         return
     
     # destroying from function
-    from_window.destroy()
+    #from_window.destroy()
     
     # Screen Definition
     read_datas_window = tk.Tk()
@@ -2178,7 +2188,9 @@ def read_messages(from_window, from_function, from_code, lower = True):
     cursor.execute(f"""SELECT Name, Position, Message_Reason, Message, To_Code, Message_Number
                    FROM Messages
                    WHERE To_Level = '{level}'""")
-    message_datas = [data for data in cursor.fetchall() if from_code in eval(data[-2]) or from_code == eval(data[-2])]
+    datas = cursor.fetchall()
+
+    message_datas = [data for data in datas if from_code == eval(data[-2]) or from_code in eval(data[-2])]
 
     if not message_datas:
         tk.messagebox.showinfo(message = 'No New Messages', title = 'Inbox Empty')
@@ -2206,7 +2218,8 @@ def read_messages(from_window, from_function, from_code, lower = True):
 
             data_lst = eval(data[-2])
 
-            data_lst.remove(from_code)
+            if isinstance(data_lst, list):
+                data_lst.remove(from_code)
 
             if data_lst:
                 cursor.execute(f"""UPDATE Messages
