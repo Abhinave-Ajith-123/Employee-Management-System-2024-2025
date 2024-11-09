@@ -2221,12 +2221,12 @@ def read_messages(from_window, from_function, from_code, lower = True):
             if isinstance(data_lst, list):
                 data_lst.remove(from_code)
 
-            if data_lst:
+            if data_lst and isinstance(data_lst, list):
                 cursor.execute(f"""UPDATE Messages
                             SET To_Code = '{data_lst}'
                             WHERE Message_Number = {data[-1]}""")
                 
-            if not data_lst:
+            if not data_lst or isinstance(data_lst, int):
                 cursor.execute(f"""DELETE FROM Messages
                             WHERE Message_Number = {data[-1]}""")
                 
