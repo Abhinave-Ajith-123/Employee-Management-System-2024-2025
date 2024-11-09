@@ -2793,8 +2793,6 @@ def compose_email(from_window, from_function, from_code):
         from_ = _from.get() if '@' in _from.get() and '.com' in _from.get() else None
         password = passwd.get().strip() if passwd.get().strip() else None
 
-        #kukpvadgjwfsmgdb
-
         To = to.get() if '@' in to.get() and '.com' in to.get() else None
         Cc = cc.get().split(', ') if cc.get().strip() else []
         Bcc = bcc.get().split(', ') if bcc.get().strip() else []
