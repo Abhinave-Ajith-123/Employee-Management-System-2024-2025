@@ -122,70 +122,28 @@ def dark_theme(window):
         elif not isinstance(widget, tk.Frame):
             widget.configure(bg=f'{bg}', fg=f'{fg}')
 
-def title_page(exit = False,from_window = None, to_function = None, titles = 'Pantheon Co'.split(' ')):
-      
-    if from_window is not None: # destroy the window
-        from_window.destroy()
-
-    if to_function is None: # defining default to_function
-        to_function = homepage
-    
-    # creating the tkinter screen
-    window = tk.Tk() 
-    window.title('Title')
-
-    # row and column for gridding
-    title_row, title_column = 0, 0
-
-    # creating frame
-    title_frame = tk.LabelFrame(window, bd = 15, relief = 'groove')
-    title_frame.pack(padx = 10, pady = 10, fill = 'both')
-
-    #interating through words
-    for title in titles:
-          
-        # adding label widget
-        label = tk.Label(title_frame, text = title, font = ('Trebuchet MS', 24, 'bold', 'italic'))
-        label.grid(row = title_row, column = title_column, padx = 5, pady = 5)
-
-        # condition for adjusting column spacing
-        if len(titles)%2 != 0 and titles[-1] == title:
-            label.grid_configure(columnspan = 2)
-        
-        # increasing row and column variable
-        title_column = title_column + 1 if title_column + 1 < 2 else 0
-        title_row = title_row + 1 if title_column == 0 else title_row
-
-    # adjusting to screen resizing
-    title_frame.grid_columnconfigure('all', weight = 1)
-
-    # function for timeout
-    def timeout(event = None):
-
-        # to cancel the after function is not used before destroying
-        if event is not None:
-            window.after_cancel(timeout_call)
-
-        window.destroy() # to destroy the window
-        if not exit:
-            to_function() # to the next function
-        
-        if exit:
-            #ccommiting and closing the connections
-            connection.commit()
-            cursor.close()
-            connection.close()
-
-    title_frame.bind('<Button-1>', timeout) # destroy on click
-    timeout_call = window.after(5000, timeout) # destroy after 5s (5000ms = 5s)
-
-    window.mainloop() # looping the main screen
-
 def homepage(): # home screen to the app
 
+    def exit():
+
+        homepage.destroy()
+
+        connection.commit()
+        cursor.close()
+        connection.close()
+
+    homepage = tk.Tk()
+    homepage.title('Employee Management System')
+
+    company_name = tk.Frame(homepage)
+    company_name.pack(side = 'left', fill = 'both', expand = True)
+
+    text = tk.Label(company_name, text = 'Pantheon Co\n\nEmployee\nManagement\nSystem', font = ('Trebuchet MS', 35, 'bold'))
+    text.pack(padx = 20, pady = 20)
+
     # creating the window
-    window = tk.Tk()
-    window.title('Employee Management System')
+    window = tk.Frame(homepage)
+    window.pack(side = 'right', fill = 'both', expand = True)
 
     datetime_frame = tk.Frame(window)
     datetime_frame.pack(padx = 5, pady = 1, fill = 'both')
@@ -202,7 +160,7 @@ def homepage(): # home screen to the app
 
     #creating the frame
     frame = tk.LabelFrame(window, text = 'Options', bd = 5, relief = 'groove')
-    frame.pack(padx = 5, pady = 5, fill = 'both')
+    frame.pack(padx = 5, pady = 5, fill = 'both', expand = True)
 
     # labels on the buttons
     button_Label = ['Administrator Interface', 
@@ -216,7 +174,7 @@ def homepage(): # home screen to the app
                        lambda: entry_ticket_x_attendance(window), 
                        lambda : new_x_edit_reg(window), 
                        lambda: entry_ticket_x_attendance(window, attendance = True), 
-                       lambda : title_page(exit = True, from_window = window, titles = 'Thank You....'.split(' '))]
+                       exit]
 
     # row and column for gridding
     row, column = 0, 0
@@ -237,13 +195,16 @@ def homepage(): # home screen to the app
         row = row + 1 if column == 0 else row
 
     #theme change button and gridding
-    theme_change = tk.Button(window, text = 'Change Theme\nLight / Dark', command = lambda : switch_theme(window, (frame, datetime_frame)), padx = 10, pady = 10)
+    theme_change = tk.Button(window, text = 'Change Theme\nLight / Dark', command = lambda : switch_theme(homepage, (window, company_name, frame, datetime_frame)), padx = 10, pady = 10)
     theme_change.pack(padx = 5, pady = 5, fill = 'both')
 
     #adding hover effects
     hover(window)
     hover(frame)
 
+    
+    dark_theme(homepage)
+    dark_theme(company_name)
     dark_theme(window)
     dark_theme(frame)
     dark_theme(datetime_frame)
@@ -255,7 +216,6 @@ def homepage(): # home screen to the app
 
 # combined function to mark attendance and to get data for interface access
 def entry_ticket_x_attendance(from_window, lower = True, attendance = False): 
-
 
     from_window.destroy()
 
@@ -624,8 +584,6 @@ def new_x_edit_reg(from_window, from_function = None, from_code = None, emp_code
 
     def clear(datas = None): # function to clear the form
 
-        # clear the entry widget ; add default value / existing value
-        
         f_name.delete(0, tk.END) ; f_name.insert(0, 'First Name' if not edit else datas[0])
         l_name.delete(0, tk.END) ; l_name.insert(0, 'Last Name' if not edit else datas[1])
         gender.delete(0, tk.END) ; gender.insert(0, 'Gender' if not edit else datas[2])
@@ -651,13 +609,11 @@ def new_x_edit_reg(from_window, from_function = None, from_code = None, emp_code
         phone_no_2.delete(0, tk.END) ; phone_no_2.insert(0, '+' if not edit else f'{datas[12]} {datas[13]}')
 
         if lower:
-
             emp_type.delete(0, tk.END) ; emp_type.insert(0, 'Employement Type' if not edit else datas[14])
             branch.delete(0, tk.END) ; branch.insert(0, 'Branch' if not edit else datas[15])
             dept.delete(0, tk.END) ; dept.insert(0, 'Department' if not edit else datas[16])
         
         if not lower: # fields specific to admininstrator
-
             position.delete(0, tk.END) ; position.insert(0, 'Position' if not edit else datas[14])
             salary.delete(0, tk.END) ; salary.insert(0, 'Salary' if not edit else datas[15])
 
@@ -730,11 +686,9 @@ def new_x_edit_reg(from_window, from_function = None, from_code = None, emp_code
             for data in datas:
                 
                 statement = f"""UPDATE {table} SET `{data[0]}` = {data[1]} WHERE {table}_Code = {emp_code}""" if isinstance(data[1], int) else f"""
-                               
                                UPDATE {table} SET `{data[0]}` = '{data[1]}' WHERE {table}_Code = {emp_code}"""
                 
                 cursor.execute(statement)
-
             connection.commit()
 
         else:
@@ -752,7 +706,6 @@ def new_x_edit_reg(from_window, from_function = None, from_code = None, emp_code
             if lower:
                 cursor.execute(f"""INSERT INTO Attendance_Sheet (Employee_Code, Attendance_Passcode)
                                VALUES ({values[0]}, '{values[1]}')""")
-                
             connection.commit()
 
             if lower:
@@ -767,7 +720,6 @@ def new_x_edit_reg(from_window, from_function = None, from_code = None, emp_code
         
         from_function(from_code)
 
-    #combobox values for employment types
     employment_types = ['Full Time', 'Part Time', 'Contract', 'Intern']
     branches = ['Branch - 1']
     departments = ['Department']
@@ -2793,6 +2745,8 @@ def compose_email(from_window, from_function, from_code):
         from_ = _from.get() if '@' in _from.get() and '.com' in _from.get() else None
         password = passwd.get().strip() if passwd.get().strip() else None
 
+        #kukpvadgjwfsmgdb
+
         To = to.get() if '@' in to.get() and '.com' in to.get() else None
         Cc = cc.get().split(', ') if cc.get().strip() else []
         Bcc = bcc.get().split(', ') if bcc.get().strip() else []
@@ -3043,4 +2997,4 @@ def delete(from_window, from_function, from_code, all = False, client = False, A
 
     delete_window.mainloop()
 
-title_page()
+homepage()
