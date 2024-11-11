@@ -8,8 +8,6 @@ from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from Variables import *
 
-dark = True # flag for dark theme
-
 def update_time(window, time, date):
 
     current_date = datetime.datetime.now().strftime('Date : %d - %m - %Y')
@@ -170,10 +168,10 @@ def homepage(): # home screen to the app
                     'Exit']
     
     #functions fot the button
-    button_function = [lambda: entry_ticket_x_attendance(window, lower = False),
-                       lambda: entry_ticket_x_attendance(window), 
-                       lambda : new_x_edit_reg(window), 
-                       lambda: entry_ticket_x_attendance(window, attendance = True), 
+    button_function = [lambda: entry_ticket_x_attendance(homepage, lower = False),
+                       lambda: entry_ticket_x_attendance(homepage), 
+                       lambda : new_x_edit_reg(homepage), 
+                       lambda: entry_ticket_x_attendance(homepage, attendance = True), 
                        exit]
 
     # row and column for gridding
@@ -641,8 +639,11 @@ def new_x_edit_reg(from_window, from_function = None, from_code = None, emp_code
         _contact_1 = (phone_no_1.get()[5:]) if ((phone_no_2.get())[5:]).isdigit() else None
 
         _name_2 = name_2.get() if (name_2.get()).strip() and name_2.get() != 'Name'  else None
-        country_code = ((phone_no_2.get()).split())[0] if ((((phone_no_2.get()).split())[0])[1:]).isdigit() else None
-        contact_2 = int(((phone_no_2.get()).split())[1]) if (((phone_no_2.get()).split())[1]).isdigit() else None
+
+        phone_2 = phone_no_2.get().split() if len(phone_no_2.get().split()) > 1 else None
+
+        _country_code = (phone_2[0]) if phone_2 is not None and (phone_2[0])[1:].isdigit() else None
+        _contact_2 = int(phone_2[1]) if phone_2 is not None and (phone_2[1]).isdigit() else None
 
         if lower:
             _emp_type = emp_type.get() if (emp_type.get()).strip() and emp_type.get() != 'Emloyment Type'  else None
@@ -664,8 +665,8 @@ def new_x_edit_reg(from_window, from_function = None, from_code = None, emp_code
                 ('Emg_Contact_1_Name', _name_1), 
                 ('Emg_Contact_1_Phone_Number', _contact_1),
                 ('Emg_Contact_2_Name', _name_2), 
-                ('Country_Code', country_code), 
-                ('Emg_Contact_2_Phone_Number', int(contact_2)),
+                ('Country_Code', _country_code), 
+                ('Emg_Contact_2_Phone_Number', _contact_2),
                 ('Email', _email)]
         
         datas = datas + [('Employment_Type', _emp_type), ('Branch', _branch), ('Department', _dept)] if lower else datas + [('Salary', _salary), ('Position', _position)]
@@ -1171,10 +1172,10 @@ def new_x_edit_client(from_window, from_function, from_code, client_code = None,
 
             while existing:
 
-                client_code = random.randint(1, 10001)
+                new_client_code = random.randint(1, 10001)
                 
                 cursor.execute(f'''SELECT Client_Code FROM Client
-                               WHERE Client_Code = {client_code}''')
+                               WHERE Client_Code = {new_client_code}''')
                 code = cursor.fetchone()
 
                 existing = False if code is None else True
@@ -1185,10 +1186,10 @@ def new_x_edit_client(from_window, from_function, from_code, client_code = None,
                            WHERE {table}_Code = {from_code}""")
             name = [f'{name[0]} {name[1]}' for name in cursor.fetchall()][0]
 
-            tk.messagebox.showinfo(message = f'Data Registered\n Client Code : {client_code}', title = 'Registered')
+            tk.messagebox.showinfo(message = f'Data Registered\n Client Code : {new_client_code}', title = 'Registered')
         
             headers = ', '.join(['Employee_Code, Employee_Name', 'Client_Code'] + [data[0] for data in datas if data != 'NULL'])
-            values = tuple([from_code, name, client_code] + [data[1] for data in datas if data != 'NULL'])
+            values = tuple([from_code, name, new_client_code] + [data[1] for data in datas if data != 'NULL'])
             
             cursor.execute(f"""INSERT INTO Client ({headers})
                            VALUES {values}""")
@@ -1570,7 +1571,7 @@ def read_datas(from_window = None, from_function = None, from_code = None, min =
         return
     
     # destroying from function
-    #from_window.destroy()
+    from_window.destroy()
     
     # Screen Definition
     read_datas_window = tk.Tk()
@@ -1704,11 +1705,18 @@ def read_data(from_window, emp_code, from_function = None, from_code = None, low
         value = tk.Label(job_data_frame, text = data[1])
         value.grid(row = row, column = column + 1, padx = 5, pady = 5, sticky = 'w')
 
+        if data == job_data[-1]:
+
+            label.grid_configure(columnspan = 4)
+            column += 4
+            value.grid_configure(columnspan = 4, column = column)
+            column += 4
+
         if column + 2 < 7:
             seperator = tk.Label(job_data_frame, text = '|', font = 'bold')
             seperator.grid(row = row, column = column + 2, padx = 5, pady = 5, sticky = 'ew')
 
-        column = column + 3 if column + 3 < 9 else 0
+        column = column + 3 if column + 3 < 8 else 0
         row = row + 1 if column == 0 else row
 
     emg_data = ['Contact-1', ('Name : ', datas[13][1]), ('Phone Number : ', datas[14][1]),
