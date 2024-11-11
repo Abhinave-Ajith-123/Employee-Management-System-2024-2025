@@ -1,5 +1,7 @@
 import datetime
 
+dark = True
+
 current_year = datetime.datetime.now().year
 
 nationality_contry_code = [
