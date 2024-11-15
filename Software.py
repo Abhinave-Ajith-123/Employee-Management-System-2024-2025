@@ -11,17 +11,16 @@ from Variables import *
 def update_time(window, time, date):
 
     current_date = datetime.datetime.now().strftime('Date : %d - %m - %Y')
-    current_time = datetime.datetime.now().strftime('Time : %H : %M : %S')
+    current_time = datetime.datetime.now().strftime('Time : %H : %M')
 
     time.config(text=current_time)
     date.config(text=current_date)
 
-    if window.winfo_exists():
-        # Store the after() ID to manage it later if needed
-        window.update_id = window.after(1000, lambda: update_time(window, time, date))
-        
-    if not hasattr(window, 'update_id'):
-        window.after_cancel(window.update_id)
+    if not window.winfo_exist():
+        window.after_cancel(update_id)
+        return
+
+    update_id = window.after(1000, lambda: update_time(window, time, date))
 
 def timeframe(window):
 
@@ -38,7 +37,6 @@ def timeframe(window):
 
     dark_theme(datetime_frame)
 
-# establish connection with mysql database
 connection = mysql.connector.connect(
     host = 'sql.freedb.tech',
     user = 'freedb_pranav',
@@ -46,35 +44,29 @@ connection = mysql.connector.connect(
     database = 'freedb_empsys'
 )
 
-cursor = connection.cursor() # establish cursor
+cursor = connection.cursor()
 
-def on_enter(event): # hover effect 
+def on_enter(event): 
 
-    # dark theme
     if dark:
         event.widget.config(bg = '#003', fg = 'white')
     
-    # light theme
     if not dark:
         event.widget.config(bg = 'light grey', fg = 'black')
 
-def on_leave(event): # hover effect
+def on_leave(event):
 
-    # dark theme
     if dark:
         event.widget.config(bg = '#112', fg = 'white')
 
-    # light theme  
     if not dark:
         event.widget.config(bg = 'SystemButtonFace', fg = 'black')
 
-def on_click(event): # hover effect
+def on_click(event):
     
-    # dark theme
     if dark:
         event.widget.config(bg = 'grey', fg = 'white')
-
-    # light theme  
+ 
     if not dark:
         event.widget.config(bg = 'white', fg = 'black')
 
@@ -120,8 +112,8 @@ def dark_theme(window):
         elif not isinstance(widget, tk.Frame):
             widget.configure(bg=f'{bg}', fg=f'{fg}')
 
-def homepage(): # home screen to the app
-
+def homepage():
+    
     def exit():
 
         homepage.destroy()
@@ -139,7 +131,6 @@ def homepage(): # home screen to the app
     text = tk.Label(company_name, text = 'Pantheon Co\n\nEmployee\nManagement\nSystem', font = ('Trebuchet MS', 35, 'bold'))
     text.pack(padx = 20, pady = 20)
 
-    # creating the window
     window = tk.Frame(homepage)
     window.pack(side = 'right', fill = 'both', expand = True)
 
@@ -156,47 +147,38 @@ def homepage(): # home screen to the app
 
     update_pf()
 
-    #creating the frame
+    
     frame = tk.LabelFrame(window, text = 'Options', bd = 5, relief = 'groove')
     frame.pack(padx = 5, pady = 5, fill = 'both', expand = True)
 
-    # labels on the buttons
     button_Label = ['Administrator Interface', 
                     'Employee Interface', 
                     'Employee Registration', 
                     'Mark Attendance', 
                     'Exit']
     
-    #functions fot the button
     button_function = [lambda: entry_ticket_x_attendance(homepage, lower = False),
                        lambda: entry_ticket_x_attendance(homepage), 
                        lambda : new_x_edit_reg(homepage), 
                        lambda: entry_ticket_x_attendance(homepage, attendance = True), 
                        exit]
 
-    # row and column for gridding
     row, column = 0, 0
 
-    #iterating label and function with relation
     for label, function in zip(button_Label, button_function):
 
-        # defining button widget and gridding
         button = tk.Button(frame, text = label, command = function, padx = 20, pady = 20)
         button.grid(row = row, column = column, padx = 5, pady = 5, sticky = 'news')
 
-        # adjusting the column
         if label == 'Exit':
             button.grid_configure(columnspan = 2)
 
-        #increasing the row-column variables
         column = column + 1 if column + 1 < 2 else 0
         row = row + 1 if column == 0 else row
 
-    #theme change button and gridding
     theme_change = tk.Button(window, text = 'Change Theme\nLight / Dark', command = lambda : switch_theme(homepage, (window, company_name, frame, datetime_frame)), padx = 10, pady = 10)
     theme_change.pack(padx = 5, pady = 5, fill = 'both')
 
-    #adding hover effects
     hover(window)
     hover(frame)
 
@@ -207,38 +189,33 @@ def homepage(): # home screen to the app
     dark_theme(frame)
     dark_theme(datetime_frame)
         
-    #adjusting according th resizing of the screen
     frame.grid_columnconfigure('all', weight = 1)
 
-    window.mainloop()  #looping the screen
+    window.mainloop()
 
-# combined function to mark attendance and to get data for interface access
 def entry_ticket_x_attendance(from_window, lower = True, attendance = False): 
 
     from_window.destroy()
 
-    def back_func(): # back function
+    def back_func():
         
-        # destroy the entry_window and goes to homepage
         entry_window.destroy()
         homepage()
 
-    def enter_func(): # enter function
+    def enter_func():
 
-        #retrieving the data from entry widgets
         emp_code = employee_code.get()
         first_name = f_name.get().title()
         last_name = l_name.get().title()
         passcode = password.get()
 
-        #checking for fake data
         if emp_code == '' or first_name == '' or last_name == '' or passcode == '' or not emp_code.isdigit():
             tk.messagebox.showerror(title = 'Error', message = 'Invalid Entry')
             return
         
-        emp_code = int(emp_code) # converting to integer
+        emp_code = int(emp_code)
 
-        if not attendance: # data verification and interface access
+        if not attendance:
 
             table = 'Employee' if lower else 'Administrator'
             passcode = passcode if lower else hash(passcode.encode()).hexdigest()
@@ -258,7 +235,6 @@ def entry_ticket_x_attendance(from_window, lower = True, attendance = False):
                 return
             
             elif data is None:
-                #error message if data not found
                 tk.messagebox.showerror(title = 'Error', message = 'Incorrect Data')
                 return
 
@@ -268,14 +244,13 @@ def entry_ticket_x_attendance(from_window, lower = True, attendance = False):
             
             Interface = Administrator if Interface[0] == 'Administrator' else Employee
             
-            #running interface
             entry_window.destroy()
             tk.messagebox.showinfo(title = 'Login Successful', message = 'Login Successful')
 
             Interface(emp_code)
         
-        elif attendance and lower: # to mark attendance
-            
+        elif attendance and lower: 
+
             cursor.execute('SHOW COLUMNS FROM Attendance_Sheet')
             columns = [column[0] for column in cursor.fetchall()]
 
@@ -317,18 +292,16 @@ def entry_ticket_x_attendance(from_window, lower = True, attendance = False):
             tk.messagebox.showinfo(title = 'Attendance Marked', message = 'Attendance has been marked for the day')
             homepage()
 
-    #creating the entry_window
     entry_window = tk.Tk()
     entry_window.title('Data Verification')
     entry_window.minsize(width = 400, height = 0)
 
     timeframe(entry_window)
 
-    #creating the frame
+    
     frame = tk.LabelFrame(entry_window, relief = 'groove', bd = 5)
     frame.pack(padx = 5, pady = 5, fill = 'both')
 
-    # widget Labels
     Labels = ['Employee Code' if lower else 'Administrator Code', 
               'First Name', 
               'Last Name', 
@@ -336,62 +309,54 @@ def entry_ticket_x_attendance(from_window, lower = True, attendance = False):
     
     for label, row in zip(Labels, range(4)):
         
-        #gridding the widget label
         text = tk.Label(frame, text = label + ' : ')
         text.grid(row = row, column = 0, padx = 5, pady = 5)
 
-    #creating widgets
     employee_code = tk.Entry(frame, width = 20)
     f_name = tk.Entry(frame, width = 20)
     l_name = tk.Entry(frame, width = 20)
-    password = tk.Entry(frame, width = 20)
+    password = tk.Entry(frame, width = 20, show = '•')
 
     widgets = [employee_code, f_name, l_name, password]
-    #gridding the widgets
+
     for widget, row in zip(widgets, range(4)):
         widget.grid(row = row, column = 1, padx = 5, pady = 5)
     
-    #creating buttons( back, enter ) and packing
     button_back = tk.Button(entry_window, text = 'Back', command = back_func, padx = 10, pady = 10)
     button_back.pack(padx = 5, pady = 5, side = tk.LEFT, fill = 'x', expand = True)
 
     button_enter = tk.Button(entry_window, text = 'Enter', command = enter_func, padx = 10, pady = 10)
     button_enter.pack(padx = 5, pady = 5, side = tk.RIGHT, fill = 'x', expand = True)
 
-    #adding hover effect
     hover(entry_window)
 
-    # adjusting to resizing of entry_window
     frame.grid_columnconfigure('all', weight = 1)
 
     dark_theme(entry_window)
     dark_theme(frame)
 
-    entry_window.mainloop()# looping the entry_window
+    entry_window.mainloop()
 
-def Administrator(ad_code): # administrator interface
+def Administrator(ad_code):
 
     def exit():
 
         admin_window.destroy()
         homepage()
     
-    #creating the admin_window
     admin_window = tk.Tk()
-    admin_window.title('Employee Interface')
+    admin_window.title('Administrator Interface')
 
     timeframe(admin_window)
 
-    #creeating a frame
     frame = tk.LabelFrame(admin_window, bd = 5, relief = 'groove')
     frame.pack(padx = 5, pady = 5, fill = 'both')
 
-    #button labels and functions
     Labels = ['retrieve your data', 
               'edit your data', 
               'add new administrator data', 
               'retrieve all administrator data', 
-              'retrieve all employee data\n[ emergency contacts ]',
+              'retrieve all administrator data\n[ emergency contacts ]',
               'retrieve all employee data', 
               'retrieve all employee data\n[ emergency contacts ]', 
               'retrieve all attendance data', 
@@ -424,10 +389,10 @@ def Administrator(ad_code): # administrator interface
     functions = [lambda : read_data(admin_window, ad_code, Administrator, ad_code, lower = False),
                  lambda : new_x_edit_reg(admin_window, Administrator, ad_code, lower = False, edit = True, emp_code = ad_code),
                  lambda : new_x_edit_reg(admin_window, Administrator, ad_code, lower = False),
-                 lambda : read_datas(admin_window, Administrator, ad_code, lower = False, indices = list(range(14))),
-                 lambda : read_datas(admin_window, Administrator, ad_code, lower = False, indices = [14, 15, 16]),
-                 lambda : read_datas(admin_window, Administrator, ad_code, lower = True, indices = list(range(15))),
-                 lambda : read_datas(admin_window, Administrator, ad_code, lower = True, indices = [14, 15, 16]),
+                 lambda : read_datas(admin_window, Administrator, ad_code, lower = False, indices = [0,2,3,4,5,6,7,1,8,9,10,12]),
+                 lambda : read_datas(admin_window, Administrator, ad_code, lower = False, indices = [0,2,3,13,14,15,16]),
+                 lambda : read_datas(admin_window, Administrator, ad_code, lower = True, indices = [0,2,3,4,5,6,7,1,8,9,10,11,12,14,15]),
+                 lambda : read_datas(admin_window, Administrator, ad_code, lower = True, indices = [0,2,3,16,17,18,19]),
                  lambda : get_month(admin_window, Administrator, ad_code, all = True),
                  lambda : get_code(admin_window, Administrator, ad_code, lower = False),
                  lambda : get_month(admin_window, Administrator, ad_code),
@@ -438,7 +403,7 @@ def Administrator(ad_code): # administrator interface
                  lambda : new_position_or_salary(admin_window, Administrator, ad_code,increment = False),
                  lambda : new_x_edit_client(admin_window, Administrator, ad_code),
                  lambda : get_code(admin_window, Administrator, ad_code, client = True, edit = True),
-                 lambda : read_datas(admin_window, Administrator, ad_code, lower = False, client = True, indices = [1,2,3]),
+                 lambda : read_datas(admin_window, Administrator, ad_code, lower = False, client = True, indices =list(range(2,19))),
                  lambda : get_code(admin_window, Administrator, ad_code, lower = False, client = True, all = True),
                  lambda : get_code(admin_window, Administrator, ad_code, False, True, False),
                  lambda : delete(admin_window, Administrator, ad_code, client = True, Emp = False),
@@ -455,12 +420,10 @@ def Administrator(ad_code): # administrator interface
                  lambda : delete(admin_window, Administrator, ad_code, all = True, Att = True, Emp = False),
                  exit]
 
-    # row-column variables for griding
     row, column = 0, 0
 
     for label, function in zip(Labels, functions):
         
-        #creating button widget and gridding them
         button = tk.Button(frame, text = label.title(), command = function, padx = 20, pady = 20)
         button.grid(row = row, column = column, padx = 5, pady = 5, sticky = 'news')
 
@@ -468,11 +431,9 @@ def Administrator(ad_code): # administrator interface
             button.grid_configure(columnspan = 4)
             column += 3
 
-        #incrementing the row-column variables
         column = column + 1 if column + 1 < 4 else 0
         row = row + 1 if column == 0 else row
 
-    #adding hover effects
     hover(frame)
     
     frame.grid_columnconfigure('all', weight = 1)
@@ -480,26 +441,23 @@ def Administrator(ad_code): # administrator interface
     dark_theme(admin_window)
     dark_theme(frame)
 
-    admin_window.mainloop() # looping the main screen
+    admin_window.mainloop()
 
-def Employee(emp_code): # employee interface
+def Employee(emp_code):
 
     def exit():
 
         emp_window.destroy()
         homepage()
     
-    #creating emp_window
     emp_window = tk.Tk()
     emp_window.title('Employee Interface')
 
     timeframe(emp_window)
 
-    #creating frame
     frame = tk.LabelFrame(emp_window, bd = 5, relief = 'groove')
     frame.pack(padx = 5, pady = 5, fill = 'both')
 
-    #button labels
     Labels = ['retrieve your data', 
               'edit your data', 
               'retrieve your attendance data', 
@@ -517,16 +475,15 @@ def Employee(emp_code): # employee interface
               'draft appeals', 
               'exit']
     
-    #buttone functions
     functions = [lambda : read_data(emp_window, emp_code, Employee, emp_code),
                  lambda : new_x_edit_reg(emp_window, Employee, emp_code, emp_code ,edit = True),
                  lambda : get_month(emp_window, Employee, emp_code, default_code = emp_code),
-                 lambda : read_datas(emp_window, Employee, emp_code, indices = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 14]),
-                 lambda : read_datas(emp_window, Employee, emp_code, lower = False, indices = [1, 2, 3, 4, 5, 6, 7, 8, 9, 12, 13]),
+                 lambda : read_datas(emp_window, Employee, emp_code, indices = [2,3,4,5,6,7,1,8,9,10,14,16,17]),
+                 lambda : read_datas(emp_window, Employee, emp_code, lower = False, indices = [2,3,4,5,6,7,1,8,9,13, 14]),
                  lambda : get_code(emp_window, Employee, emp_code, client = True, edit = True),
                  lambda : new_x_edit_client(emp_window, Employee, emp_code),
                  lambda : get_code(emp_window, Employee, emp_code, lower = True, client = True),
-                 lambda : read_datas(emp_window, Employee, emp_code, client = True, emp_code = emp_code, indices = list(range(20))),
+                 lambda : read_datas(emp_window, Employee, emp_code, client = True, emp_code = emp_code, indices = list(range(2,19))),
                  lambda : delete(emp_window, Employee, emp_code, client = True, Emp = False),
                  lambda : change_dealership(emp_window, Employee, emp_code),
                  lambda : change_dealership(emp_window, Employee, emp_code, True),
@@ -535,12 +492,10 @@ def Employee(emp_code): # employee interface
                  lambda : draft_appeals(emp_window, emp_code),
                  exit]
 
-    #row-column variables for gridding
     row, column = 0, 0
 
     for label, function in zip(Labels, functions):
 
-        #creating button widgets and gridding them
         button = tk.Button(frame, text = label.title(), command = function, padx = 20, pady = 20)
         button.grid(row = row, column = column, padx = 5, pady = 5, sticky = 'news')
 
@@ -548,29 +503,25 @@ def Employee(emp_code): # employee interface
             button.grid_configure(columnspan = 3)
             column += 2
 
-        #adding hover effects
         button.bind('<Enter>', on_enter)
         button.bind('<Leave>', on_leave)
         button.bind('<Button-1>', on_click)
 
-        #incrementing the row and column values
         column = column + 1 if column + 1 < 3 else 0
         row = row + 1 if column == 0 else row
     
-    #adapting to resizing
     frame.grid_columnconfigure('all', weight = 1)
 
     dark_theme(emp_window)
     dark_theme(frame)
 
-    emp_window.mainloop() #looping the emp_window
+    emp_window.mainloop()
 
-# combined function to add new registeration or edit ones registration for both employee and admisistrator
 def new_x_edit_reg(from_window, from_function = None, from_code = None, emp_code = None, lower = True, edit = False):
     
     from_window.destroy()
 
-    def back(): # back function
+    def back():
         
         add_emp_window.destroy()
         
@@ -580,7 +531,7 @@ def new_x_edit_reg(from_window, from_function = None, from_code = None, emp_code
         
         from_function(from_code)
 
-    def clear(datas = None): # function to clear the form
+    def clear(datas = None):
 
         f_name.delete(0, tk.END) ; f_name.insert(0, 'First Name' if not edit else datas[0])
         l_name.delete(0, tk.END) ; l_name.insert(0, 'Last Name' if not edit else datas[1])
@@ -611,11 +562,11 @@ def new_x_edit_reg(from_window, from_function = None, from_code = None, emp_code
             branch.delete(0, tk.END) ; branch.insert(0, 'Branch' if not edit else datas[15])
             dept.delete(0, tk.END) ; dept.insert(0, 'Department' if not edit else datas[16])
         
-        if not lower: # fields specific to admininstrator
+        if not lower:
             position.delete(0, tk.END) ; position.insert(0, 'Position' if not edit else datas[14])
             salary.delete(0, tk.END) ; salary.insert(0, 'Salary' if not edit else datas[15])
 
-    def add(): # update or add new registration function
+    def add():
         
         first_name = f_name.get().title() if (f_name.get()).strip() and f_name.get() != 'First Name' else None
         last_name = l_name.get().title() if (l_name.get()).strip() and l_name.get() != 'Last Name'  else None
@@ -665,8 +616,7 @@ def new_x_edit_reg(from_window, from_function = None, from_code = None, emp_code
                 ('Emg_Contact_1_Name', _name_1), 
                 ('Emg_Contact_1_Phone_Number', _contact_1),
                 ('Emg_Contact_2_Name', _name_2), 
-                ('Country_Code', _country_code), 
-                ('Emg_Contact_2_Phone_Number', _contact_2),
+                ('Emg_Contact_2_Phone_Number', f'{_country_code} {_contact_2}'),
                 ('Email', _email)]
         
         datas = datas + [('Employment_Type', _emp_type), ('Branch', _branch), ('Department', _dept)] if lower else datas + [('Salary', _salary), ('Position', _position)]
@@ -725,31 +675,25 @@ def new_x_edit_reg(from_window, from_function = None, from_code = None, emp_code
     branches = ['Branch - 1']
     departments = ['Department']
     
-    #creating add_emp_window
     add_emp_window = tk.Tk()
     add_emp_window.title('Registration Form' if not edit else 'Edit Registration')
 
     timeframe(add_emp_window)
 
-    #creating common frames ( for administrator and employee ) and packing them
     emp_data_frame = tk.LabelFrame(add_emp_window, text = 'Employee Details', bd = 5, relief = 'groove')
     job_data_frame = tk.LabelFrame(add_emp_window, text = 'Job Details', bd = 5, relief = 'groove')
 
     emp_data_frame.pack(padx = 5, pady = 5, fill = 'both')
     job_data_frame.pack(padx = 5, pady = 5, fill = 'both')
 
-    #creating emergency contact data frame and packing them
     emg_data_frame = tk.LabelFrame(add_emp_window, text = 'Emergency Contact Details', bd = 5, relief = 'groove')
     emg_data_frame.pack(padx = 5, pady = 5, fill = 'both')
 
-    # list of labels in frame 3
     Label_lst_3 = ['Contact - 1 ( From UAE )', 'Name', 'Phone Number', 'Contact - 2 ( From Motherland )', 'Name', 'Phone Number']
     Label_lst_1 = ['First Name', 'Last Name', 'Gender', 'Age', 'Nationality', 'Phone Number', 'Email', 'Date of Birth']
 
-    #row-column variable for gridding
     row, column = 0, 0
 
-    # defining widgets for frame 1
     f_name = tk.Entry(emp_data_frame, width = 25)
     l_name = tk.Entry(emp_data_frame, width = 25)
     gender = ttk.Combobox(emp_data_frame, width = 25, 
@@ -765,21 +709,17 @@ def new_x_edit_reg(from_window, from_function = None, from_code = None, emp_code
     dob_month = ttk.Combobox(emp_data_frame, width = 25, values = months)
     dob_year = ttk.Combobox(emp_data_frame, width = 25, values = emp_years)
 
-    #list of widgets for frame 1
     widgets = [f_name, l_name, gender, age, nationality, phone_no, email, (dob_date, dob_month, dob_year) ]
 
     for label, widget in zip(Label_lst_1, widgets):
 
-        # adding labels and gridding them
         text = tk.Label(emp_data_frame, text = label, font = ('Arial', 9, 'bold', 'underline'))
         text.grid(row = row, column = column, padx = 5, pady = 5, sticky = 'news')
 
-        # gridding the widgets ( except date of birth )
         if not isinstance(widget, tuple):
             widget.grid(row = row + 1, column = column, columnspan = 1 if widget != email else 3, 
                         padx = 5, pady = 5, sticky = 'news')
 
-        # gridding date of birth widgets
         if isinstance(widget, tuple):
 
             date, month, year = widget
@@ -788,32 +728,26 @@ def new_x_edit_reg(from_window, from_function = None, from_code = None, emp_code
             month.grid(row = row + 1, column = 1, padx = 5, pady = 5, sticky = 'news')
             year.grid(row = row + 1, column = 2, padx = 5, pady = 5, sticky = 'news')
 
-        #adjusting the column space
         if label == 'Date of Birth' or label == 'Email':
             text.grid_configure(columnspan = 3)
             column += 2
 
-        # incrementing the row-column variable
         column = column + 1 if column + 1 < 3 else 0
         row = row + 2 if column == 0 else row
     
-    #defining date of hire label
     doh_label = tk.Label(job_data_frame, text = 'Date of Hire', font = ('Arial', 9, 'underline', 'bold'))
     doh_label.grid(row = 2, column = 0, columnspan = 3 if lower else 4, padx = 5, pady = 5, sticky = 'news')
 
-    # defining comman widgets for frame 2
     doh_date = ttk.Combobox(job_data_frame, width = 25, values = days)
     doh_month = ttk.Combobox(job_data_frame, width = 25, values = months)
     doh_year = ttk.Combobox(job_data_frame, width = 25, values = emp_years + [str(year) for year in range(current_year - 17, current_year + 1)])
 
-    #gridding common widgets for frame 2
     doh_date.grid(row = 3, column = 0, padx = 5, pady = 5, sticky = 'news')
     doh_month.grid(row = 3, column = 1, columnspan = 1 if lower else 2, padx = 5, pady = 5, sticky = 'news')
     doh_year.grid(row = 3, column = 2 if lower else 3, padx = 5, pady = 5, sticky = 'news')
 
-    if lower: # specific wigets, frames and labels for employee
+    if lower:
 
-        # defining  widget
         emp_type = ttk.Combobox(job_data_frame,width = 25, values = employment_types)
         branch = ttk.Combobox(job_data_frame,width = 25, values = branches)
         dept = ttk.Combobox(job_data_frame,width = 25, values = departments)
@@ -827,62 +761,50 @@ def new_x_edit_reg(from_window, from_function = None, from_code = None, emp_code
 
             widget[1].grid(row = 1, column = column, padx = 5, pady = 5, sticky = 'ew')
 
-    if not lower: # specific widgets, frames, labels for administrator
+    if not lower:
 
-        #defining administrator special eidgets for frame 2
         position = tk.Entry(job_data_frame, width = 25)
         salary = tk.Entry(job_data_frame, width = 25)
 
-        # list of labels ; list of widgets
         Labels = ['Position', 'Salary'] ; widgets = [position, salary]
 
         for label, widget, column in zip(Labels, widgets, range(0, 4, 2)):
 
-            # creating labels and gridding them
             text = tk.Label(job_data_frame, text = label, font  = ('Arial', 9, 'underline', 'bold'))
             text.grid(row = 0, column = column, columnspan = 2, padx = 5, pady = 5)
             
-            #gridding widgets
             widget.grid(row = 1, column = column, columnspan = 2, padx = 5, pady = 5, sticky = 'news')
 
-    #redefining the row-column variables
     row, column = 0, 0
 
-    # defining widgets for frame 3
     name_1 = tk.Entry(emg_data_frame, width = 25)
     phone_no_1 = tk.Entry(emg_data_frame, width = 25)
 
     name_2 = tk.Entry(emg_data_frame, width = 25)
     phone_no_2 = tk.Entry(emg_data_frame, width = 25)
 
-    # widget list for frame 3
     widgets = [None, name_1, phone_no_1, None, name_2, phone_no_2]
 
     for label, widget in zip(Label_lst_3, widgets):
         
-        # defining and gridding labels
         text = tk.Label(emg_data_frame, text = label, font = ('Arial', 9, 'bold', 'underline'))
         text.grid(row = row, column = column, padx = 5, pady = 5, sticky = 'news')
 
-        #adjusting the column space
         if  'Contact' in label:
             text.grid_configure(columnspan = 2)
             column += 1
 
-        #gridding the widgets
         if widget is not None:
             widget.grid(row = row + 1, column = column, padx = 5, pady = 5, sticky = 'news')
 
-        # incrementing row-column variable
         column = column + 1 if column + 1 < 2 else 0
         row = row + 1 if label == 'Contact - 1' or label == 'Contact - 2' else row + 2 if column == 0 else row
     
-    #adapting to add_emp_window resizing
     emg_data_frame.grid_columnconfigure('all', weight = 1)
     emp_data_frame.grid_columnconfigure('all', weight = 1)
     job_data_frame.grid_columnconfigure('all', weight = 1)
 
-    if edit: # for editing data
+    if edit:
 
         datas = ['First_Name', 
                  'Last_Name', 
@@ -899,24 +821,18 @@ def new_x_edit_reg(from_window, from_function = None, from_code = None, emp_code
                  'Country_Code', 
                  'Emg_Contact_2_Phone_Number']
         
-        #table variable definition
         table = 'Employee' if lower else 'Administrator'
 
-        #excess datas to be retrieved
         datas = datas + ['Employment_Type', 'Branch', 'Department'] if lower else datas + ['Salary', 'Position']
 
         for data, index in zip(datas, range(len(datas))):
 
-                #retrieveing data from database
                 cursor.execute(f"""SELECT {data} FROM {table}
                                WHERE {table}_Code = {emp_code}""")
                 datas[index] = str(cursor.fetchone()[0]) if 'Date' not in data else str(cursor.fetchone()[0]).split('-')
 
-    # function to run on double click on widgets
     def on_double_click(event):
         event.widget.delete(0, tk.END)
-
-    #to add default data or to add exisiting data to be edited ; to add bind effect on the entry widgets
         
     f_name.insert(0, 'First Name' if not edit else datas[0]) ; f_name.bind('<Double-Button-1>', on_double_click)
     l_name.insert(0, 'Last Name' if not edit else datas[1]) ; l_name.bind('<Double-Button-1>', on_double_click)
@@ -956,29 +872,25 @@ def new_x_edit_reg(from_window, from_function = None, from_code = None, emp_code
         branch.insert(0, 'Branch' if not edit else datas[15]) ; branch.bind('<Double-Button-1>', on_double_click)
         dept.insert(0, 'Department' if not edit else datas[16]) ; dept.bind('<Double-Button-1>', on_double_click)
 
-    if not lower: # fields specific to administrator
-        
+    if not lower:
         position.insert(0, 'Position' if not edit else datas[14]) ; position.bind('<Double-Button-1>', on_double_click)
         salary.insert(0, 'Salary' if not edit else datas[15]) ; salary.bind('<Double-Button-1>', on_double_click)
 
-    #defining buttons
     Back_button = tk.Button(add_emp_window, text = 'Back', command = back, padx = 10, pady = 10)
     Clear_button = tk.Button(add_emp_window, text = 'Clear Form', command = lambda: clear(datas = datas if edit else None), padx = 10, pady = 10)
     Next_button = tk.Button(add_emp_window, text = 'Register' if not edit else 'Update', command = add, padx = 10, pady = 10)
 
-    #packing the buttons
     Back_button.pack(padx = 5, pady = 5, fill = 'x', side = 'left', expand = True)
     Clear_button.pack(padx = 5, pady = 5, fill = 'x', side = 'left', expand = True)
     Next_button.pack(padx = 5, pady = 5, fill = 'x', side = 'right', expand = True)
 
-    #adding hover effect on the buttons
     hover(add_emp_window)
 
     dark_theme(add_emp_window)
     for frame in add_emp_window.winfo_children():
         dark_theme(frame)
 
-    add_emp_window.mainloop() # looping the screen
+    add_emp_window.mainloop()
 
 def get_code(from_window, from_function, from_code, lower = True, client = False, all = False, edit = False):
 
@@ -1019,7 +931,7 @@ WHERE Employee_Code = {_code}"""
             read_client_data(get_code_window, _code, from_function, from_code, lower = False)
         
         if all and client and not lower and not edit:
-            read_datas(get_code_window, from_function, from_code, lower = True, client = True, emp_code = _code, indices = list(range(15)))
+            read_datas(get_code_window, from_function, from_code, lower = True, client = True, emp_code = _code, indices = list(range(2,19)))
 
         if client and edit:
             new_x_edit_client(get_code_window, from_function, from_code, _code, edit = True)
@@ -1101,11 +1013,15 @@ def new_x_edit_client(from_window, from_function, from_code, client_code = None,
         _location = location.get().title() if location.get().strip() and location.get() != 'Location' else None
         _tele_no = int(tele_no.get()) if tele_no.get().isdigit() else 'Nil'
 
-        _email = email.get().title() if '@' and '.com' in email.get() else None
+        _email = email.get() if '@' and '.com' in email.get() else None
 
         _client_name = client_name.get().title() if client_name.get().strip() and client_name.get() != 'Client Name' else None
-        _country_code = phone_no.get().split()[0] if phone_no.get().split()[0][1:].isdigit() else 'Nil'
-        _phone_no = int(phone_no.get().split()[1]) if phone_no.get().split()[1].isdigit() else 'Nil'
+
+        phone_data = phone_no.get().split() if (phone_no.get().split()) == 2  and phone_data.get() != 'Phone Number' else None
+
+        _country_code = phone_no.get().split()[0] if phone_data is not None else 'Nil'
+        _phone_no = int(phone_no.get().split()[1]) if phone_data is not None else 'Nil'
+
         _contract_period = int(contract_period.get()) if contract_period.get().isdigit() else None
 
         _from_date = from_date.get() if from_date.get().isdigit() else None
@@ -1127,16 +1043,15 @@ def new_x_edit_client(from_window, from_function, from_code, client_code = None,
 
         datas = [('Company_Name', _company_name),
                  ('Location', _location),
-                 ('Company_Telephone_Number', _tele_no) if _tele_no != 'Nil' else 'NULL',
+                 ('Telephone_Number', _tele_no) if _tele_no != 'Nil' else 'NULL',
                  ('Email', _email), 
                  ('Client_Name', _client_name),
-                 ('Country_Code', _country_code) if _country_code != 'Nil' else 'NULL',
-                 ('Client_Phone_Number', _phone_no) if _phone_no != 'Nil' else 'NULL',
+                 ('Phone_Number', f'{_country_code} {_phone_no}') if _country_code != 'Nil' or _phone_no != 'Nil' else 'NULL',
                  ('Contract_Period', _contract_period),
                  ('Contract_From', f'{_from_year}-{_from_month}-{_from_date}'),
                  ('Contract_To', f'{_to_year}-{_to_month}-{_to_date}'),
-                 ('Avg_Sales_Per_Month', _avg_sales),
-                 ('Total_Sales', _total_sales),
+                 ('Average_Sales', _avg_sales),
+                 ('Sales_This_Month', _total_sales),
                  ('Product_1', _prod_1),
                  ('Product_2', _prod_2) if _prod_2 != 'Nil' else 'NULL',
                  ('Product_3', _prod_3) if _prod_3 != 'Nil' else 'NULL',
@@ -1526,7 +1441,7 @@ def code_passcode_generator(lower = True):
     if existing:
         code_passcode_generator()
         
-    return [code, passcode, '12345678'] if lower else [code, 'a1b2c3d4']
+    return [code, passcode, '12345678'] if lower else code
 
 def read_datas(from_window = None, from_function = None, from_code = None, min = 0, 
                lower = True, client = False, emp_code = None, dept = None, indices = [0,2,3,4,5,6,7,8,1,9,10,11,12,13,14]):
@@ -1550,43 +1465,33 @@ def read_datas(from_window = None, from_function = None, from_code = None, min =
         read_datas(read_datas_window, from_function, from_code, min = min - 20, 
                    lower = lower, client = client, emp_code = emp_code, dept = dept, indices = indices)
 
-    #table definition
-    table = 'Administrator' if not lower else 'Client' if client else 'Employee'
+    table = 'Administrator' if not lower and not client else 'Client' if client else 'Employee'
 
-    # header row
     cursor.execute(f'SHOW COLUMNS FROM {table}')
     header_row = [header[0] for header in cursor.fetchall()]
 
-    # MySQL statement for retrieving data
     statement = f"""SELECT * FROM {table} WHERE Employee_Code = {emp_code}""" if emp_code is not None else f"""
     SELECT * FROM {table} WHERE Department = '{dept}'""" if dept is not None else f"""SELECT * FROM {table}"""
 
-    # Datas
     cursor.execute(statement)
     datas = (cursor.fetchall())[min::]
 
-    # Check weather any data exists
     if not datas or not header_row:
         tk.messagebox.showerror(title = 'Error', message = 'Data not found')
         return
     
-    # destroying from function
     from_window.destroy()
     
-    # Screen Definition
     read_datas_window = tk.Tk()
     read_datas_window.title('Data')
 
     timeframe(read_datas_window)
 
-    #frame definition
     frame = tk.Frame(read_datas_window, bd = 5, relief = 'groove')
     frame.pack(padx = 5, pady = 5, fill = 'both')
 
-    # gridding the header row and divider between data and header as per given indices
     for index, column in zip(indices, range(len(indices))):
 
-        #gridding header
         header_label = tk.Label(frame, text = header_row[index], font = ('Arial', 9, 'bold', 'underline'))
         header_label.grid(row = 0, column = column, padx = 1, pady = 3, sticky = 'ew')
 
@@ -1596,7 +1501,9 @@ def read_datas(from_window = None, from_function = None, from_code = None, min =
 
         for index, column in zip(indices, range(len(indices))):
 
-            data_label = tk.Label(frame, text = datas[data_count][index])
+            data = datas[data_count][index] if datas[data_count][index] is not None else 'NA'
+
+            data_label = tk.Label(frame, text = data)
             data_label.grid(row = data_count + 1, column = column, padx = 1, pady = 3, sticky = 'ew')
 
         data_count += 1
@@ -1641,9 +1548,9 @@ def read_data(from_window, emp_code, from_function = None, from_code = None, low
     
     table = 'Administrator' if not lower else 'Employee'
 
-    datas = ['First_Name', f'{table}_Code', 'Last_Name', 'Gender', 'Age', 'Nationality', 'Date_Of_Birth',
+    datas = [f'{table}_Code', 'First_Name', 'Last_Name', 'Gender', 'Age', 'Nationality', 'Date_Of_Birth',
              'Phone_Number', 'Email', 'Position', 'Salary', 'Provident_Fund', 'Date_Of_Hire', 'Emg_Contact_1_Name',
-             'Emg_Contact_1_Phone_Number', 'Emg_Contact_2_Name', 'Country_Code', 'Emg_Contact_2_Phone_Number']
+             'Emg_Contact_1_Phone_Number', 'Emg_Contact_2_Name', 'Emg_Contact_2_Phone_Number']
     
     datas = datas + ['Employment_Type', 'Branch', 'Department'] if lower else datas
 
@@ -1653,7 +1560,7 @@ def read_data(from_window, emp_code, from_function = None, from_code = None, low
         _data = cursor.fetchone()
         
         if _data is not None:
-            datas[index] = (data.replace('_', ' '), _data[0])
+            datas[index] = (data.replace('_', ' '), _data[0] if _data[0] is not None else 'NA')
 
         else:
             tk.messagebox.showerror(title = 'Error', message = 'Data Not Found')
@@ -2778,34 +2685,24 @@ def compose_email(from_window, from_function, from_code):
 
         message.attach(MIMEText(Con, "plain"))
 
-        # Combine all recipients into one list
         recipients = [To] + Cc + Bcc
 
-        # Start SMTP server
         server = smtplib.SMTP('smtp.gmail.com', 587)
         server.starttls()
 
         try:
-            server.login(from_, password)  # Use 'from_' instead of 'To' for login
+            server.login(from_, password)
 
-        except smtplib.SMTPAuthenticationError:
+        except:
             tk.messagebox.showerror(message='Your Email Id or Password is Invalid', title='Error')
             server.quit()
             return
         
-        except Exception as e:
-            tk.messagebox.showerror(message=f'An error occurred: {e}', title='Error')
-            server.quit()
-            return
-
         try:
             server.sendmail(from_, To, message.as_string())
 
-        except smtplib.SMTPRecipientsRefused:
+        except:
             tk.messagebox.showerror(message='Recipient email ID is invalid', title='Error')
-
-        except Exception as e:
-            tk.messagebox.showerror(message=f'An error occurred: {e}', title='Error')
 
         else:
             tk.messagebox.showinfo(message='Mail Successfully Sent', title='Success')
@@ -2822,10 +2719,8 @@ def compose_email(from_window, from_function, from_code):
     email_window = tk.Tk()
     email_window.title('Compose Email')
 
-    # real time date and time packing
     timeframe(email_window)
 
-    # function code
     from_details = tk.Frame(email_window, bd = 5, relief = 'groove')
     from_details.pack(padx = 5, pady = 5, fill = 'both')
 
