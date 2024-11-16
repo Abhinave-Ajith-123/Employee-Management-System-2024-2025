@@ -11,12 +11,12 @@ from Variables import *
 def update_time(window, time, date):
 
     current_date = datetime.datetime.now().strftime('Date : %d - %m - %Y')
-    current_time = datetime.datetime.now().strftime('Time : %H : %M')
+    current_time = datetime.datetime.now().strftime('Time : %H : %M : %S')
 
     time.config(text=current_time)
     date.config(text=current_date)
 
-    if not window.winfo_exist():
+    if not window.winfo_exists():
         window.after_cancel(update_id)
         return
 
@@ -279,6 +279,7 @@ def entry_ticket_x_attendance(from_window, lower = True, attendance = False):
 
                 entry_window.destroy()
                 tk.messagebox.showinfo(title = 'Attendance Marked Already', message = 'Attendance has been already marked for the day')
+                homepage()
                 return
 
             cursor.execute(f"""UPDATE Attendance_Sheet
@@ -402,7 +403,7 @@ def Administrator(ad_code):
                  lambda : new_position_or_salary(admin_window, Administrator, ad_code),
                  lambda : new_position_or_salary(admin_window, Administrator, ad_code,increment = False),
                  lambda : new_x_edit_client(admin_window, Administrator, ad_code),
-                 lambda : get_code(admin_window, Administrator, ad_code, client = True, edit = True),
+                 lambda : get_code(admin_window, Administrator, ad_code, lower = False, client = True, edit = True),
                  lambda : read_datas(admin_window, Administrator, ad_code, lower = False, client = True, indices =list(range(2,19))),
                  lambda : get_code(admin_window, Administrator, ad_code, lower = False, client = True, all = True),
                  lambda : get_code(admin_window, Administrator, ad_code, False, True, False),
@@ -484,7 +485,7 @@ def Employee(emp_code):
                  lambda : new_x_edit_client(emp_window, Employee, emp_code),
                  lambda : get_code(emp_window, Employee, emp_code, lower = True, client = True),
                  lambda : read_datas(emp_window, Employee, emp_code, client = True, emp_code = emp_code, indices = list(range(2,19))),
-                 lambda : delete(emp_window, Employee, emp_code, client = True, Emp = False),
+                 lambda : delete(emp_window, Employee, emp_code, lower = True, client = True, Emp = False),
                  lambda : change_dealership(emp_window, Employee, emp_code),
                  lambda : change_dealership(emp_window, Employee, emp_code, True),
                  lambda : compose_email(emp_window, Employee, emp_code),
@@ -555,16 +556,16 @@ def new_x_edit_reg(from_window, from_function = None, from_code = None, emp_code
         phone_no_1.delete(0, tk.END) ; phone_no_1.insert(0, '+971 ' if not edit else datas[10])
 
         name_2.delete(0, tk.END) ; name_2.insert(0, 'Name' if not edit else datas[11])
-        phone_no_2.delete(0, tk.END) ; phone_no_2.insert(0, '+' if not edit else f'{datas[12]} {datas[13]}')
+        phone_no_2.delete(0, tk.END) ; phone_no_2.insert(0, '+' if not edit else  datas[12])
 
         if lower:
-            emp_type.delete(0, tk.END) ; emp_type.insert(0, 'Employement Type' if not edit else datas[14])
-            branch.delete(0, tk.END) ; branch.insert(0, 'Branch' if not edit else datas[15])
-            dept.delete(0, tk.END) ; dept.insert(0, 'Department' if not edit else datas[16])
+            emp_type.delete(0, tk.END) ; emp_type.insert(0, 'Employement Type' if not edit else datas[13])
+            branch.delete(0, tk.END) ; branch.insert(0, 'Branch' if not edit else datas[14])
+            dept.delete(0, tk.END) ; dept.insert(0, 'Department' if not edit else datas[15])
         
         if not lower:
-            position.delete(0, tk.END) ; position.insert(0, 'Position' if not edit else datas[14])
-            salary.delete(0, tk.END) ; salary.insert(0, 'Salary' if not edit else datas[15])
+            position.delete(0, tk.END) ; position.insert(0, 'Position' if not edit else datas[13])
+            salary.delete(0, tk.END) ; salary.insert(0, 'Salary' if not edit else datas[14])
 
     def add():
         
@@ -818,12 +819,11 @@ def new_x_edit_reg(from_window, from_function = None, from_code = None, emp_code
                  'Emg_Contact_1_Name', 
                  'Emg_Contact_1_Phone_Number', 
                  'Emg_Contact_2_Name',
-                 'Country_Code', 
                  'Emg_Contact_2_Phone_Number']
         
         table = 'Employee' if lower else 'Administrator'
 
-        datas = datas + ['Employment_Type', 'Branch', 'Department'] if lower else datas + ['Salary', 'Position']
+        datas = datas + ['Employment_Type', 'Branch', 'Department'] if lower else datas + ['Position', 'Salary']
 
         for data, index in zip(datas, range(len(datas))):
 
@@ -865,16 +865,16 @@ def new_x_edit_reg(from_window, from_function = None, from_code = None, emp_code
             event.widget.insert(0, country_code + ' ')
 
     name_2.insert(0, 'Name' if not edit else datas[11]) ; name_2.bind('<Double-Button-1>', on_double_click)
-    phone_no_2.insert(0, '+' if not edit else f'{datas[12]}  {datas[13]}') ; phone_no_2.bind('<Button-1>', get_country_code)
+    phone_no_2.insert(0, '+' if not edit else datas[12]) ; phone_no_2.bind('<Button-1>', get_country_code)
 
     if lower:
-        emp_type.insert(0, 'Employement Type' if not edit else datas[14]) ; emp_type.bind('<Double-Button-1>', on_double_click)
-        branch.insert(0, 'Branch' if not edit else datas[15]) ; branch.bind('<Double-Button-1>', on_double_click)
-        dept.insert(0, 'Department' if not edit else datas[16]) ; dept.bind('<Double-Button-1>', on_double_click)
+        emp_type.insert(0, 'Employement Type' if not edit else datas[13]) ; emp_type.bind('<Double-Button-1>', on_double_click)
+        branch.insert(0, 'Branch' if not edit else datas[14]) ; branch.bind('<Double-Button-1>', on_double_click)
+        dept.insert(0, 'Department' if not edit else datas[15]) ; dept.bind('<Double-Button-1>', on_double_click)
 
     if not lower:
-        position.insert(0, 'Position' if not edit else datas[14]) ; position.bind('<Double-Button-1>', on_double_click)
-        salary.insert(0, 'Salary' if not edit else datas[15]) ; salary.bind('<Double-Button-1>', on_double_click)
+        position.insert(0, 'Position' if not edit else datas[13]) ; position.bind('<Double-Button-1>', on_double_click)
+        salary.insert(0, 'Salary' if not edit else datas[14]) ; salary.bind('<Double-Button-1>', on_double_click)
 
     Back_button = tk.Button(add_emp_window, text = 'Back', command = back, padx = 10, pady = 10)
     Clear_button = tk.Button(add_emp_window, text = 'Clear Form', command = lambda: clear(datas = datas if edit else None), padx = 10, pady = 10)
@@ -1017,7 +1017,7 @@ def new_x_edit_client(from_window, from_function, from_code, client_code = None,
 
         _client_name = client_name.get().title() if client_name.get().strip() and client_name.get() != 'Client Name' else None
 
-        phone_data = phone_no.get().split() if (phone_no.get().split()) == 2  and phone_data.get() != 'Phone Number' else None
+        phone_data = phone_no.get().split() if (phone_no.get().split()) == 2  and phone_no.get() != 'Phone Number' else None
 
         _country_code = phone_no.get().split()[0] if phone_data is not None else 'Nil'
         _phone_no = int(phone_no.get().split()[1]) if phone_data is not None else 'Nil'
@@ -1219,12 +1219,11 @@ def new_x_edit_client(from_window, from_function, from_code, client_code = None,
     if edit:
         
         cursor.execute(f"""SELECT * FROM Client
-                       WHERE Client_Code = {client_code}
-                       AND Employee_Code = {from_code}""")
+                       WHERE Client_Code = {client_code}""")
         data = list(cursor.fetchone())
 
         
-        data[11], data[12] = str(data[11]).split('-'), str(data[12]).split('-')
+        data[10], data[11] = str(data[10]).split('-'), str(data[11]).split('-')
 
     def on_double_click(event):
         event.widget.delete(0, tk.END)
@@ -1245,25 +1244,25 @@ def new_x_edit_client(from_window, from_function, from_code, client_code = None,
     email.insert(0, 'Email' if not edit else data[6]) ; email.bind('<Double-Button-1>', on_double_click)
 
     client_name.insert(0, 'Client Name' if not edit else data[7]) ; client_name.bind('<Double-Button-1>', on_double_click)
-    phone_no.insert(0, 'Phone Number' if not edit else f'{data[8]} {data[9]}') ; phone_no.bind('<Button-1>', get_country_code)
-    contract_period.insert(0, 'Contract Period ( In Months )' if not edit else data[10]) ; contract_period.bind('<Double-Button-1>', on_double_click)
+    phone_no.insert(0, 'Phone Number' if not edit else data[8]) ; phone_no.bind('<Button-1>', get_country_code)
+    contract_period.insert(0, 'Contract Period ( In Months )' if not edit else data[9]) ; contract_period.bind('<Double-Button-1>', on_double_click)
 
-    from_date.insert(0, 'Date' if not edit else data[11][2]) ; from_date.bind('<Double-Button-1>', on_double_click)
-    from_month.insert(0, 'Month' if not edit else data[11][1]) ; from_month.bind('<Double-Button-1>', on_double_click)
-    from_year.insert(0, 'Year' if not edit else data[11][0]) ; from_year.bind('<Double-Button-1>', on_double_click)
+    from_date.insert(0, 'Date' if not edit else data[10][2]) ; from_date.bind('<Double-Button-1>', on_double_click)
+    from_month.insert(0, 'Month' if not edit else data[10][1]) ; from_month.bind('<Double-Button-1>', on_double_click)
+    from_year.insert(0, 'Year' if not edit else data[10][0]) ; from_year.bind('<Double-Button-1>', on_double_click)
 
-    to_date.insert(0, 'Date' if not edit else data[12][2]) ; to_date.bind('<Double-Button-1>', on_double_click)
-    to_month.insert(0, 'Month' if not edit else data[12][1]) ; to_month.bind('<Double-Button-1>', on_double_click)
-    to_year.insert(0, 'Year' if not edit else data[12][0]) ; to_year.bind('<Double-Button-1>', on_double_click)
+    to_date.insert(0, 'Date' if not edit else data[11][2]) ; to_date.bind('<Double-Button-1>', on_double_click)
+    to_month.insert(0, 'Month' if not edit else data[11][1]) ; to_month.bind('<Double-Button-1>', on_double_click)
+    to_year.insert(0, 'Year' if not edit else data[11][0]) ; to_year.bind('<Double-Button-1>', on_double_click)
 
-    avg_sales.insert(0, 'Average Sales Per Month' if not edit else data[13]) ; avg_sales.bind('<Double-Button-1>', on_double_click)
-    total_sales.insert(0, 'Sales This Month' if not edit else data[14]) ; total_sales.bind('<Double-Button-1>', on_double_click)
+    avg_sales.insert(0, 'Average Sales Per Month' if not edit else data[12]) ; avg_sales.bind('<Double-Button-1>', on_double_click)
+    total_sales.insert(0, 'Sales This Month' if not edit else data[13]) ; total_sales.bind('<Double-Button-1>', on_double_click)
 
-    prod_1.insert(0, 'Product 1' if not edit else data[15]) ; prod_1.bind('<Double-Button-1>', on_double_click)
-    prod_2.insert(0, 'Product 2' if not edit else data[16] if data[16] is not None else 'Nil') ; prod_2.bind('<Double-Button-1>', on_double_click)
-    prod_3.insert(0, 'Product 3' if not edit else data[17] if data[17] is not None else 'Nil') ; prod_3.bind('<Double-Button-1>', on_double_click)
-    prod_4.insert(0, 'Product 4' if not edit else data[18] if data[18] is not None else 'Nil') ; prod_4.bind('<Double-Button-1>', on_double_click)
-    prod_5.insert(0, 'Product 5' if not edit else data[19] if data[19] is not None else 'Nil') ; prod_5.bind('<Double-Button-1>', on_double_click)
+    prod_1.insert(0, 'Product 1' if not edit else data[14]) ; prod_1.bind('<Double-Button-1>', on_double_click)
+    prod_2.insert(0, 'Product 2' if not edit or data[15] is None else data[15]) ; prod_2.bind('<Double-Button-1>', on_double_click)
+    prod_3.insert(0, 'Product 3' if not edit or data[16] is None else data[16]) ; prod_3.bind('<Double-Button-1>', on_double_click)
+    prod_4.insert(0, 'Product 4' if not edit or data[17] is None else data[17]) ; prod_4.bind('<Double-Button-1>', on_double_click)
+    prod_5.insert(0, 'Product 5' if not edit or data[18] is None else data[18]) ; prod_5.bind('<Double-Button-1>', on_double_click)
 
     client_frame.grid_columnconfigure('all', weight = 1)
     product_frame.grid_columnconfigure('all', weight = 1)
@@ -1441,7 +1440,7 @@ def code_passcode_generator(lower = True):
     if existing:
         code_passcode_generator()
         
-    return [code, passcode, '12345678'] if lower else code
+    return [code, passcode, '12345678'] if lower else [code]
 
 def read_datas(from_window = None, from_function = None, from_code = None, min = 0, 
                lower = True, client = False, emp_code = None, dept = None, indices = [0,2,3,4,5,6,7,8,1,9,10,11,12,13,14]):
@@ -1580,7 +1579,7 @@ def read_data(from_window, emp_code, from_function = None, from_code = None, low
     emg_data_frame.pack(padx = 5, pady = 5, fill = 'both')
 
     emp_data = datas[0:9]
-    job_data = datas[9:13] if not lower else datas[9:13] + datas[18:21]
+    job_data = datas[9:13] if not lower else datas[9:13] + datas[17:20]
 
     emp_data[1] = ('Name', f'{emp_data[1][1]} {emp_data[2][1]}')
     emp_data.pop(2)
@@ -1627,7 +1626,7 @@ def read_data(from_window, emp_code, from_function = None, from_code = None, low
         row = row + 1 if column == 0 else row
 
     emg_data = ['Contact-1', ('Name : ', datas[13][1]), ('Phone Number : ', datas[14][1]),
-                'Contact-2', ('Name : ', datas[15][1]), ('Phone Number : ', f'{datas[16][1]} {datas[17][1]}')]
+                'Contact-2', ('Name : ', datas[15][1]), ('Phone Number : ', datas[16][1])]
     
     row, column = 0, 0
 
@@ -1852,7 +1851,7 @@ def get_month(from_window, from_function, from_code, all = False, default_code =
         
         else:
             
-            cursor.execute(f"""SELECT {', '.join(headers)} FROM Attendance_Sheet
+            cursor.execute(f"""SELECT `{'`, `'.join(headers)}` FROM Attendance_Sheet
                            WHERE Employee_Code = {code}""")
             datas = cursor.fetchone()
 
@@ -1987,6 +1986,10 @@ def read_att_datas(from_window, from_function, from_code, headers, datas, page_c
     read_att_datas_window.mainloop()
 
 def read_att_data(from_window, to_function, to_code, headers, datas):
+
+    any(print(header) for header in headers)
+    print()
+    any(print(data) for data in datas)
 
     from_window.destroy()
     
@@ -2779,7 +2782,7 @@ def compose_email(from_window, from_function, from_code):
 
     email_window.mainloop()
 
-def delete(from_window, from_function, from_code, all = False, client = False, Att = False, Emp = True):
+def delete(from_window, from_function, from_code, lower = False, all = False, client = False, Att = False, Emp = True):
 
     from_window.destroy()
     
@@ -2799,8 +2802,10 @@ def delete(from_window, from_function, from_code, all = False, client = False, A
             tk.messagebox.showerror(message = 'Incorrect data entered', title = 'Error')
             return
 
-        cursor.execute(f"""SELECT Administrator_Code, First_Name, Last_Name FROM Administrator
-                       WHERE Administrator_Code = {ad_code_}
+        table = 'Administrator' if not lower else 'Employee'
+
+        cursor.execute(f"""SELECT {table}_Code, First_Name, Last_Name FROM {table}
+                       WHERE {table}_Code = {ad_code_}
                        AND First_Name = '{name_.split()[0]}'
                        AND Last_Name = '{name_.split()[1]}'""")
         
@@ -2810,11 +2815,11 @@ def delete(from_window, from_function, from_code, all = False, client = False, A
 
         if Att and all:
 
-            cursor.execute(f'SHOW COLUMNS FROM {table}')
+            cursor.execute(f'SHOW COLUMNS FROM Attendance_Sheet')
             headers = [data[0] for data in cursor.fetchall()]
 
-            for header in headers:
-                cursor.execute(f"""ALTER TABLE {table}
+            for header in headers[2:]:
+                cursor.execute(f"""ALTER TABLE Attendance_Sheet
                                DROP COLUMN `{header}`""")
                 
         elif not all and client and Emp:
@@ -2865,7 +2870,7 @@ def delete(from_window, from_function, from_code, all = False, client = False, A
     frame = tk.Frame(delete_window, relief = 'groove', bd = 5)
     frame.pack(padx = 5, pady = 5, fill = 'both')
 
-    Labels = ['Employee Code : ' if client and Emp else 'Administrator Code :', 'Name : ']
+    Labels = ['Employee Code : ' if client and Emp else 'Administrator Code :' if not lower else 'Employee Code :', 'Name : ']
 
     ad_code = tk.Entry(frame, width = 25)
     name = tk.Entry(frame, width = 25)
