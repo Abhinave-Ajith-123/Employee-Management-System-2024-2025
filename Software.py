@@ -980,30 +980,30 @@ def new_x_edit_client(from_window, from_function, from_code, client_code = None,
         
         company_name.delete(0, tk.END) ; company_name.insert(0, 'Company Name' if not edit else data[3])
         location.delete(0, tk.END) ; location.insert(0, 'Location' if not edit else data[4])
-        tele_no.delete(0, tk.END) ; tele_no.insert(0, 'Telephone Number' if not edit else data[5])
+        tele_no.delete(0, tk.END) ; tele_no.insert(0, 'Telephone Number' if not edit else data[5] if data[5] is not None else 'Telephone Number')
 
         email.delete(0, tk.END) ; email.insert(0, 'Email' if not edit else data[6])
 
         client_name.delete(0, tk.END) ; client_name.insert(0, 'Client Name' if not edit else data[7])
-        phone_no.delete(0, tk.END) ; phone_no.insert(0, 'Phone Number' if not edit else f'{data[8]} {data[9]}')
-        contract_period.delete(0, tk.END) ; contract_period.insert(0, 'Contract Period ( In Months )' if not edit else data[10])
+        phone_no.delete(0, tk.END) ; phone_no.insert(0, 'Phone Number' if not edit else data[8] if data[8] is not None else 'Phone Number')
+        contract_period.delete(0, tk.END) ; contract_period.insert(0, 'Contract Period ( In Months )' if not edit else data[9])
 
-        from_date.delete(0, tk.END) ; from_date.insert(0, 'Date' if not edit else data[11][2])
-        from_month.delete(0, tk.END) ; from_month.insert(0, 'Month' if not edit else data[11][1])
-        from_year.delete(0, tk.END) ; from_year.insert(0, 'Year' if not edit else data[11][0])
+        from_date.delete(0, tk.END) ; from_date.insert(0, 'Date' if not edit else data[10][2])
+        from_month.delete(0, tk.END) ; from_month.insert(0, 'Month' if not edit else data[10][1])
+        from_year.delete(0, tk.END) ; from_year.insert(0, 'Year' if not edit else data[10][0])
 
-        to_date.delete(0, tk.END) ; to_date.insert(0, 'Date' if not edit else data[12][2])
-        to_month.delete(0, tk.END) ; to_month.insert(0, 'Month' if not edit else data[12][1])
-        to_year.delete(0, tk.END) ; to_year.insert(0, 'Year' if not edit else data[12][0])
+        to_date.delete(0, tk.END) ; to_date.insert(0, 'Date' if not edit else data[11][2])
+        to_month.delete(0, tk.END) ; to_month.insert(0, 'Month' if not edit else data[11][1])
+        to_year.delete(0, tk.END) ; to_year.insert(0, 'Year' if not edit else data[11][0])
 
-        avg_sales.delete(0, tk.END) ; avg_sales.insert(0, 'Average Sales Per Month' if not edit else data[13])
-        total_sales.delete(0, tk.END) ; total_sales.insert(0, 'Sales This Month' if not edit else data[14])
+        avg_sales.delete(0, tk.END) ; avg_sales.insert(0, 'Average Sales Per Month' if not edit else data[12])
+        total_sales.delete(0, tk.END) ; total_sales.insert(0, 'Sales This Month' if not edit else data[13])
 
-        prod_1.delete(0, tk.END) ; prod_1.insert(0, 'Product 1' if not edit else data[15])
-        prod_2.delete(0, tk.END) ; prod_2.insert(0, 'Product 2' if not edit else data[16] if data[16] is not None else 'Nil')
-        prod_3.delete(0, tk.END) ; prod_3.insert(0, 'Product 3' if not edit else data[17] if data[17] is not None else 'Nil')
-        prod_4.delete(0, tk.END) ; prod_4.insert(0, 'Product 4' if not edit else data[18] if data[18] is not None else 'Nil')
-        prod_5.delete(0, tk.END) ; prod_5.insert(0, 'Product 5' if not edit else data[19] if data[19] is not None else 'Nil')
+        prod_1.delete(0, tk.END) ; prod_1.insert(0, 'Product 1' if not edit else data[14])
+        prod_2.delete(0, tk.END) ; prod_2.insert(0, 'Product 2' if not edit else data[15] if data[15] is not None else 'Nil')
+        prod_3.delete(0, tk.END) ; prod_3.insert(0, 'Product 3' if not edit else data[16] if data[16] is not None else 'Nil')
+        prod_4.delete(0, tk.END) ; prod_4.insert(0, 'Product 4' if not edit else data[17] if data[17] is not None else 'Nil')
+        prod_5.delete(0, tk.END) ; prod_5.insert(0, 'Product 5' if not edit else data[18] if data[18] is not None else 'Nil')
 
         tk.messagebox.showinfo(title = 'Successfully Cleared', message = 'Form has been cleared')
 
@@ -1017,10 +1017,10 @@ def new_x_edit_client(from_window, from_function, from_code, client_code = None,
 
         _client_name = client_name.get().title() if client_name.get().strip() and client_name.get() != 'Client Name' else None
 
-        phone_data = phone_no.get().split() if (phone_no.get().split()) == 2  and phone_no.get() != 'Phone Number' else None
+        phone_data = phone_no.get().split() if len(phone_no.get().split()) == 2  and phone_no.get() != 'Phone Number' else None
 
-        _country_code = phone_no.get().split()[0] if phone_data is not None else 'Nil'
-        _phone_no = int(phone_no.get().split()[1]) if phone_data is not None else 'Nil'
+        _country_code = phone_data[0] if phone_data is not None else 'Nil'
+        _phone_no = int(phone_data[1]) if phone_data is not None else 'Nil'
 
         _contract_period = int(contract_period.get()) if contract_period.get().isdigit() else None
 
@@ -1239,12 +1239,12 @@ def new_x_edit_client(from_window, from_function, from_code, client_code = None,
 
     company_name.insert(0, 'Company Name' if not edit else data[3]) ; company_name.bind('<Double-Button-1>', on_double_click)
     location.insert(0, 'Location' if not edit else data[4]) ; location.bind('<Double-Button-1>', on_double_click)
-    tele_no.insert(0, 'Telephone Number' if not edit else data[5]) ; tele_no.bind('<Double-Button-1>', on_double_click)
+    tele_no.insert(0, 'Telephone Number' if not edit else data[5] if data[5] is not None else 'Telephone Number') ; tele_no.bind('<Double-Button-1>', on_double_click)
 
     email.insert(0, 'Email' if not edit else data[6]) ; email.bind('<Double-Button-1>', on_double_click)
 
     client_name.insert(0, 'Client Name' if not edit else data[7]) ; client_name.bind('<Double-Button-1>', on_double_click)
-    phone_no.insert(0, 'Phone Number' if not edit else data[8]) ; phone_no.bind('<Button-1>', get_country_code)
+    phone_no.insert(0, 'Phone Number' if not edit else data[8] if data[8] is not None else 'Phone Number') ; phone_no.bind('<Button-1>', get_country_code)
     contract_period.insert(0, 'Contract Period ( In Months )' if not edit else data[9]) ; contract_period.bind('<Double-Button-1>', on_double_click)
 
     from_date.insert(0, 'Date' if not edit else data[10][2]) ; from_date.bind('<Double-Button-1>', on_double_click)
@@ -1688,7 +1688,7 @@ def read_client_data(from_window, client_code, from_function, from_code, lower =
     emp_labels = ['Employee Code', 'Employee Name']
     client_labels = ['Client Code', 'Company Name', 'Location',
                    'Telephone Number', 'Email', 'Client Name', 'Phone Number',
-                   'Contract From', 'Contract To', 'Contract Period',
+                    'Contract Period', 'Contract From', 'Contract To',
                    'Total Sales', 'Average Sales Per Month']
     
     if data is None:
@@ -1714,11 +1714,8 @@ def read_client_data(from_window, client_code, from_function, from_code, lower =
     product_frame.pack(padx = 5, pady = 5, fill = 'both')
 
     emp_data = data[0:2]
-    client_data = list(data[2:15])
-    product_data = data[15:]
-
-    client_data[6] = f'{client_data[6]} {client_data[7]}'
-    client_data.pop(7)
+    client_data = list(data[2:14])
+    product_data = data[14:]
 
     row, column = 0, 0
 
@@ -1987,10 +1984,6 @@ def read_att_datas(from_window, from_function, from_code, headers, datas, page_c
 
 def read_att_data(from_window, to_function, to_code, headers, datas):
 
-    any(print(header) for header in headers)
-    print()
-    any(print(data) for data in datas)
-
     from_window.destroy()
     
     def back_func():
@@ -2068,7 +2061,8 @@ def read_messages(from_window, from_function, from_code, lower = True):
                    WHERE To_Level = '{level}'""")
     datas = cursor.fetchall()
 
-    message_datas = [data for data in datas if from_code == eval(data[-2]) or from_code in eval(data[-2])]
+    message_datas = [data for data in datas if from_code == eval(data[-2])]
+    message_datas = [data for data in datas if from_code in eval(data[-2])] if not message_datas else message_datas
 
     if not message_datas:
         tk.messagebox.showinfo(message = 'No New Messages', title = 'Inbox Empty')
@@ -2144,7 +2138,7 @@ def read_messages(from_window, from_function, from_code, lower = True):
             Data.grid(row = row, column = 1, padx = 5, pady = 5, sticky = 'w')
 
         button_back = tk.Button(read_message_window, text = 'Back', command = back_func, padx = 10, pady = 10)
-        button_next = tk.Button(read_message_window, text = 'Draft', command = next_func, padx = 10, pady = 10)
+        button_next = tk.Button(read_message_window, text = 'Next', command = next_func, padx = 10, pady = 10)
 
         button_back.pack(padx = 5, pady = 5, fill = 'both', expand = True, side = 'left')
         button_next.pack(padx = 5, pady = 5, fill = 'both', expand = True, side = 'right')
@@ -2672,8 +2666,6 @@ def compose_email(from_window, from_function, from_code):
         Sub = sub.get().strip() if sub.get().strip() else None
         Con = con.get('1.0', tk.END).strip() if con.get('1.0', tk.END).strip() else None
 
-        any(print(data) for data in [from_, password, To, Sub, Con])
-
         if any(data is None for data in [from_, password, To, Sub, Con]):
             tk.messagebox.showerror(message='Incorrect data entered', title='Error')
             return
@@ -2822,7 +2814,7 @@ def delete(from_window, from_function, from_code, lower = False, all = False, cl
                 cursor.execute(f"""ALTER TABLE Attendance_Sheet
                                DROP COLUMN `{header}`""")
                 
-        elif not all and client and Emp:
+        elif not all and client and not Emp:
 
             cursor.execute(f"""SELECT * FROM Client
                            WHERE Client_Code = {_code}""")
