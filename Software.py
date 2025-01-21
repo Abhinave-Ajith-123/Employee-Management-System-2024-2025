@@ -571,7 +571,7 @@ def new_x_edit_reg(from_window, from_function = None, from_code = None, emp_code
         
         first_name = f_name.get().title() if (f_name.get()).strip() and f_name.get() != 'First Name' else None
         last_name = l_name.get().title() if (l_name.get()).strip() and l_name.get() != 'Last Name'  else None
-        _gender = (gender.get()[:4].strip()).title() if (gender.get()[:4]).strip() and gender.get() != 'Gender'  else None
+        _gender = (gender.get().strip()).title() if (gender.get()[:4]).strip() and gender.get() != 'Gender'  else None
 
         _age = int(age.get()) if (age.get()).isdigit() else None
         _nationality = nationality.get().title() if (nationality.get()).strip() and nationality.get() != 'Nationality'  else None
@@ -671,10 +671,6 @@ def new_x_edit_reg(from_window, from_function = None, from_code = None, emp_code
             return
         
         from_function(from_code)
-
-    employment_types = ['Full Time', 'Part Time', 'Contract', 'Intern']
-    branches = ['Branch - 1']
-    departments = ['Department']
     
     add_emp_window = tk.Tk()
     add_emp_window.title('Registration Form' if not edit else 'Edit Registration')
@@ -697,8 +693,7 @@ def new_x_edit_reg(from_window, from_function = None, from_code = None, emp_code
 
     f_name = tk.Entry(emp_data_frame, width = 25)
     l_name = tk.Entry(emp_data_frame, width = 25)
-    gender = ttk.Combobox(emp_data_frame, width = 25, 
-                          values = ['Male ( Mr. )', 'Married Female ( Mrs. )', 'Unmarried Female ( Ms. )'])
+    gender = ttk.Combobox(emp_data_frame, width = 25, values = genders)
 
     age = ttk.Combobox(emp_data_frame, width = 25, values = list(range(18, 61)))
     nationality = ttk.Combobox(emp_data_frame, width = 25, values = countries)
