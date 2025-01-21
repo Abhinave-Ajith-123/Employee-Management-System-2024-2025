@@ -202,3 +202,40 @@ months = ['01','02','03','04','05','06','07','08','09','10','11','12']
 
 emp_years = [str(year) for year in range(current_year - 60, current_year - 17)]
 client_years = [str(year) for year in range(2000, current_year)]
+
+employment_types = ["Full-time", "Part-time", "Contract", "Internship", "Freelance"]
+
+branches = [
+    "TechPioneers Dubai Branch",
+    "TechPioneers Abu Dhabi Innovation Hub",
+    "TechPioneers Sharjah Development Center",
+    "TechPioneers Al Ain Support Office",
+    "TechPioneers Ras Al Khaimah Regional Hub",
+    "TechPioneers Fujairah Operations",
+    "TechPioneers Ajman Cloud Center",
+    "TechPioneers Umm Al Quwain Satellite Office"
+]
+
+departments =  [
+    "Software Development",
+    "Quality Assurance (QA)",
+    "IT Support",
+    "Project Management",
+    "Product Management",
+    "Data Analytics",
+    "Cybersecurity",
+    "Network Administration",
+    "Cloud Infrastructure",
+    "Artificial Intelligence (AI) and Machine Learning (ML)",
+    "DevOps",
+    "Human Resources (HR)",
+    "Sales and Marketing",
+    "Customer Support",
+    "Research and Development (R&D)",
+    "Finance and Accounting",
+    "Business Analysis",
+    "Technical Writing",
+    "UI/UX Design"
+]
+
+genders = ['Male', 'Female']
